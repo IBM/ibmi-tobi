@@ -1,12 +1,15 @@
 #!/usr/bin/env python3.9
 
 """ The module used to build a project"""
+from datetime import datetime
+import shutil
 import sys
+import os
 from pathlib import Path
 from tempfile import mkstemp
 from typing import Any, Dict, List, Optional
 
-from makei.const import BOB_PATH, MK_PATH
+from makei.const import TOBI_PATH, MK_PATH
 from makei.ibmi_json import IBMiJson
 from makei.iproj_json import IProjJson
 from makei.rules_mk import RulesMk
@@ -22,8 +25,8 @@ class BuildEnv:
     src_dir: Path
     targets: List[str]
     make_options: Optional[str]
-    bob_path: Path
-    bob_makefile: Path
+    tobi_path: Path
+    tobi_makefile: Path
     build_vars_path: Path
     build_vars_handle: Path
     curlib: str
@@ -39,15 +42,27 @@ class BuildEnv:
     failed_targets: List[str]
 
     def __init__(self, targets: List[str] = None, make_options: Optional[str] = None,
-                 overrides: Dict[str, Any] = None):
+                 overrides: Dict[str, Any] = None, trace=False):
         overrides = overrides or {}
         self.src_dir = Path.cwd()
         self.targets = targets if targets is not None else ["all"]
         self.make_options = make_options if make_options else ""
-        self.bob_path = Path(
-            overrides["bob_path"]) if "bob_path" in overrides else BOB_PATH
-        self.bob_makefile = MK_PATH / 'Makefile'
-        self.build_vars_handle, path = mkstemp()
+        self.tobi_path = Path(
+            overrides["tobi_path"]) if "tobi_path" in overrides else TOBI_PATH
+        self.tobi_makefile = MK_PATH / 'Makefile'
+        self._trace = trace
+
+        if self._trace:
+            trace_dir = Path.cwd() / ".makei-trace"
+            trace_dir.mkdir(parents=True, exist_ok=True)
+            self.trace_dir = trace_dir / datetime.now().strftime("%Y%m%d_%H%M%S")
+            self.trace_dir.mkdir()
+            path = self.trace_dir / "BUILDVARSMKPATH"
+        else:
+            self.build_vars_handle, path = mkstemp()
+            os.close(self.build_vars_handle)
+            self.trace_dir = None
+
         self.build_vars_path = Path(path)
         self.iproj_json_path = self.src_dir / "iproj.json"
         self.iproj_json = IProjJson.from_file(self.iproj_json_path)
@@ -65,12 +80,28 @@ class BuildEnv:
         self._create_build_vars()
 
     def __del__(self):
-        self.build_vars_path.unlink()
+        if not self._trace:
+            self.build_vars_path.unlink()
+
+    def dump_resolved_makefile(self):
+        """Generate a fully resolved Makefile dump without building."""
+        if not self._trace:
+            return
+
+        resolved_makefile_path = self.trace_dir / "ResolvedMakefile.txt"
+        with resolved_makefile_path.open("w", encoding="utf8") as f:
+
+            def write_line(line_bytes: bytes):
+                line = line_bytes.decode()
+                f.write(line)
+
+            cmd = f"{self.generate_make_cmd()} -r -R -p -q"
+            run_command(cmd, stdout_handler=write_line)
 
     def generate_make_cmd(self):
         """ Returns the make command used to build the project."""
         cmd = f'/QOpenSys/pkgs/bin/make -k BUILDVARSMKPATH="{self.build_vars_path}"' + \
-              f' -k BOB="{self.bob_path}" -f "{self.bob_makefile}"'
+              f' -k TOBI_PATH="{self.tobi_path}" -f "{self.tobi_makefile}"'
         if self.make_options:
             cmd = f"{cmd} {self.make_options}"
         cmd = f"{cmd} {' '.join(self.targets)}"
@@ -80,13 +111,39 @@ class BuildEnv:
         target_file_path = self.build_vars_path
 
         rules_mk_paths = list(Path(".").rglob("Rules.mk"))
+        real_targets = []
         # Create Rules.mk.build for each Rules.mk
         for rules_mk_path in rules_mk_paths:
             rules_mk = RulesMk.from_file(rules_mk_path,  self.src_dir, map(Path, self.iproj_json.include_path))
+            rules_mk_src_obj_mapping = rules_mk.src_obj_mapping.copy()
+            if self.targets and self.targets[0] != "all":
+                for target in self.targets:
+                    if target.startswith("dir_") and target not in real_targets:
+                        real_targets.append(target)
+                    else:
+                        # Target is relative path. i.e. QRPGLESRC/TEST.RPGLE
+                        if len(Path(target).parts) > 1:
+                            tgt_dir = os.path.dirname(target)
+                            tgt = os.path.basename(target)
+                        # Target is a file name
+                        else:
+                            tgt_dir = "."
+                            tgt = target
+
+                        # Target exist in the current Rules.mk and target's rule exists
+                        if tgt_dir == str(rules_mk.containing_dir) and tgt.upper() in rules_mk_src_obj_mapping:
+                            real_targets.extend(rules_mk_src_obj_mapping.pop(tgt.upper()))
             rules_mk.build_context = self
             rules_mk_build_path = rules_mk_path.parent / ".Rules.mk.build"
             rules_mk_build_path.write_text(str(rules_mk))
             self.tmp_files.append(rules_mk_build_path)
+            # Copy to trace directory
+            if self._trace:
+                # Recreate relative folder structure in trace/rules/
+                relative_dir = rules_mk_path.parent.resolve().relative_to(self.src_dir.resolve())
+                trace_rules_subdir = self.trace_dir / "rules" / relative_dir
+                trace_rules_subdir.mkdir(parents=True, exist_ok=True)
+                shutil.copy(rules_mk_build_path, trace_rules_subdir / rules_mk_build_path.name)
 
         subdirs = list(map(lambda x: x.parents[0], rules_mk_paths))
 
@@ -171,7 +228,7 @@ COLOR_TTY := {'true' if self.color else 'false'}
 
     def _post_make(self):
         for tmp_file in self.tmp_files:
-            tmp_file.unlink()
+            tmp_file.unlink(missing_ok=True)
         print(colored("Objects:            ", Colors.BOLD), colored(f"{len(self.failed_targets)} failed", Colors.FAIL),
               colored(f"{len(self.success_targets)} succeed", Colors.OKGREEN),
               f"{len(self.success_targets) + len(self.failed_targets)} total")

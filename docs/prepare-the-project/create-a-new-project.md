@@ -33,22 +33,19 @@ The following files will be added to the project
 Continue? (yes)
 ```
 
-Simply press enter to confirm the changes and you have created a minimal bob project.
+Simply press enter to confirm the changes and you have created a minimal TOBi project.
 
 ## Manually Setup
 
-You may choose to manually setup the project by creating 
+You may choose to manually setup the project by creating
 
 - [x] `iproj.json` at the project root
 - [x] `.ibmi.json` at the directories you want to override build variables to target a different object library, or use a different EBCDIC CCSID for the compile.
 - [x] `Rules.mk` at each level of the project defining the targets
-
-
 
 So far, we have created:
 
 - [project level metadata iproj.json](prepare-the-project/iproj-json)
 - [directory level metadata .ibmi.json](prepare-the-project/ibmi-json)
 
-- [Rules.mk](prepare-the-project/rules-mk.md) defining the directory level targets to build
-
+- [Rules.mk](prepare-the-project/rules.mk.md) defining the directory level targets to build

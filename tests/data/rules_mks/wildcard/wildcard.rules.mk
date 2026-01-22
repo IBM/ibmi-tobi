@@ -4,6 +4,7 @@ CURRENT:=V7R5
 HEADER := some
 COMMIT = *NONE
 VERSION=V7R3
+TGTRLS := *PRV
 
 # test base wildcard with variables
 %.MODULE: %.rpgle $(HEADER).rpgleinc
@@ -22,3 +23,9 @@ bar.MODULE: bar.rpgle \
 # test if this very \
 cool multiline comment \
 is ignored
+
+AB2001_B.MODULE: AB2001_B.rpgle
+AB2001_B.MODULE: TGTRLS := $(TGTRLS)
+
+AB2001.B.MODULE: AB2001.B.rpgle
+AB2001.B.MODULE: TGTRLS := $(TGTRLS)

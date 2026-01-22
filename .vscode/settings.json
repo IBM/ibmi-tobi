@@ -1,5 +1,15 @@
 {
     "files.eol": "\n",
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/src",
+        "${workspaceFolder}/tests",
+        "${workspaceFolder}/tools"
+    ],
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/src",
+        "${workspaceFolder}/tests",
+        "${workspaceFolder}/tools"
+    ]
 }

@@ -6,7 +6,7 @@ import sys
 import textwrap
 
 here = pathlib.Path(__file__).parent
-template_file = here / "bob.spec.template"
+template_file = here / "tobi.spec.template"
 
 
 def replace_version(template: str, version: str) -> str:
@@ -82,7 +82,7 @@ def main():
         sys.exit(1)
 
     spec = generate_spec(version, changelog_file, fetch_source)
-    with open("bob.spec", "w", encoding="utf-8") as out_file:
+    with open("tobi.spec", "w", encoding="utf-8") as out_file:
         out_file.write(spec)
 
 

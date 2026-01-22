@@ -1,2 +1,2 @@
-"""Subpackage containing all of bob's command line interface related code
+"""Subpackage containing all of TOBi's command line interface related code
 """

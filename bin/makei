@@ -40,7 +40,7 @@ check_path() {
 check_dependencies() {
     # Check if a list of tools are installed and in the system path
     check_path
-    check_tool python3
+    check_tool python3.9
     check_tool bash
     check_tool make
 }
@@ -48,6 +48,6 @@ check_dependencies() {
 check_dependencies
 
 SCRIPT_DIR="$(readlink -f "$0" | xargs dirname)"
-BOB_DIR=$(realpath "${SCRIPT_DIR}/..")
+TOBI_DIR=$(realpath "${SCRIPT_DIR}/..")
 
-PYTHONPATH="${BOB_DIR}/src":${PYTHONPATH} python3 "${BOB_DIR}/src/makei/cli/makei_entry.py" "$@"
+PYTHONPATH="${TOBI_DIR}/src":${PYTHONPATH} /QOpenSys/pkgs/bin/python3.9 "${TOBI_DIR}/src/makei/cli/makei_entry.py" "$@"

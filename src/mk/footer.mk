@@ -68,8 +68,10 @@ endif
 # This is a default rule - see Makefile
 dir_$(d) : $(TARGETS_$(d))
 
+slashify = $(subst _,/,$(1))
+
 .SECONDEXPANSION:
-dir_% : dir_$$(TOP)/$$(subst dir_,,$$(@F))
+dir_% : dir_$$(TOP)/$$(call slashify,$$(subst dir_,,$$(@)))
 	@echo
 
 endif

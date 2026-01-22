@@ -2,7 +2,7 @@
 
 ### How the source in the IFS and git are encoded
 We recommend that all source be encoded in UTF-8 or CCSID 1208.  This allows all characters to be represented in a single encoding which simplifies things tremendously.
-If the source is copied from QSYS via CPYTOSTMF then be  sure to use the STMFCCSID parameter.  If you use Bob's `cvttostmf` this encoding will automatically be chosen.
+If the source is copied from QSYS via CPYTOSTMF then be  sure to use the STMFCCSID parameter.  If you use TOBi's `cvttostmf` this encoding will automatically be chosen.
 ```cl
 CPYTOSTMF ... STMFCCSID(1208)
 ```

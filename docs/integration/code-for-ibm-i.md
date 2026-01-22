@@ -1,8 +1,8 @@
 # Code for IBM i
 
-## Developing on the IFS with ibmi-bob
+## Developing on the IFS with ibmi-tobi
 
-1. Make sure `ibmi-bob` is installed on the remote IBM i
+1. Make sure `ibmi-tobi` is installed on the remote IBM i
 2. Set your current schema to the library you want to build in. You can do this in the User Library List view.
 3. Create a new Action
    * Give it a unique name. This action will attempt to build everything
@@ -22,11 +22,11 @@
 >
 > `makei build` will try to build all changes objects, or all objects on the first time it's run. Consider creating an Action for `OPT=*EVENTF BUILDLIB=&CURLIB /QOpenSys/pkgs/bin/makei compile &BASENAME` to compile specific objects.
 
-## Developing on the local machine with ibmi-bob
+## Developing on the local machine with ibmi-tobi
 
-You may use Bob as the deploy backend for Code for IBM i by providing a customized `.vscode/actions.json` inside your workspace. [Read more on how to create the actions](https://halcyon-tech.github.io/vscode-ibmi/#/?id=workspaces-amp-deployment)
+You may use TOBi as the deploy backend for Code for IBM i by providing a customized `.vscode/actions.json` inside your workspace. [Read more on how to create the actions](https://halcyon-tech.github.io/vscode-ibmi/#/?id=workspaces-amp-deployment)
 
-1. Make sure `ibmi-bob` is installed on the remote IBM i
+1. Make sure `ibmi-tobi` is installed on the remote IBM i
 2. Clone the project repository to your local machine and open it up in VS Code
 3. Connect to a remote IBM i using Code for IBM i to run the builds. (You can still develop without it!)
 4. Set your current schema to the library you want to build in. You can do this in the User Library List view.

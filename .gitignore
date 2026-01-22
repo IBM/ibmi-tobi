@@ -201,4 +201,4 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-bob.spec
+tobi.spec

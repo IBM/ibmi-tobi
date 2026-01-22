@@ -1,3 +1,46 @@
+- Added to escape library names containing the # symbol.
+- Fixed source name case sensitivity in `makei compile` and `rules.mk`
+- Added support for building SYSTRG sources as TRG objects instead of PGM objects 
+  for `makei c` command.
+* Tue Dec 16 2025 Het Patel <het.patel@ibm.com> - 3.1.0
+- Added support to read target names from the `rules.mk` file for the `makei c` command.
+- Added a new recipe to support files with the .sqlvar extension.
+- Added unit test cases and divided into Remote and Local
+- Added testing workflow which will execute on new pull request
+- Added placeholder information in `features.md`
+- Added variable expansion for dependecies
+- Updated Logo images
+- support arbitrary long source names even in compile by looking up 
+  the mapping to target be derived from the Rules.mk files
+- allow multiple targets with same source name in different directories
+  even if the immediate parent directory is the same
+- allow `.rpgle` and `.sqlrpgle` to build into `PGM` objects
+- rename `bob.spec` into `tobi.spec` for RPM spec file
+- improve installation instructions to `yum clean metadata` if 
+  there is trouble
+* Fri Nov 21 2025 Edmund Reinhardt <edmund.reinhardt@ca.ibm.com> - 3.0.0
+- Rename RPM to 'tobi' from 'bob' - `yum install tobi`
+- change to use -l and --log to avoid conflict with --target
+  This allows decomposing of make rule generation vs running 
+  gmake in order to debug where any issues are
+- Updated all docs to new TOBi name from old BOB name
+- Fixed the "*** empty variable name" error in def_rules.mk.
+* Fri Nov 14 2025 Edmund Reinhardt <edmund.reinhardt@ca.ibm.com> - 2.4.33
+- Improvements to docs
+- Support PFSQL as an alternative file extension to TABLE for 
+  `CREATE TABLE` SQL source
+- Fix ValueError exception during migration
+- Now permissively allow building PGMs from RPGLE or SQLRPGLE with the 
+  additional `.PGM` in the source name.  I.e. FOO.PGM can now directly 
+  by build from `FOO.RPGLE` while in the past it had to be `FOO.PGM.RPGLE`
+- add support for SQLALIAS source files to build SQL ALIASes
+- enforces requirement for python 3.9 which avoids the error
+  "No module named 'ibm_db_dbi'" when the wrong python is used
+- now support `-t` prepare build files and output the make command 
+  without executing it; trace data is stored in ./.makei-trace.
+* Fri Mar 14 2025 Irfan Sharif <IrfanSharif@ibm.com> - 2.4.32
+- Add TGTRLS parameter missing from some commands
+- Add support for setting DFRWRT and ENHDSP parameter values of CRTDSPF command
 * Fri Dec 06 2024 Sanjula Ganepola <Sanjula.Ganepola@ibm.com> - 2.4.31
 - Update RUNSQLFLAGS to recursive assignment from simple to allow for overridden TGTRLS
 - Fix SQLSEQ_TO_DTAARA recipe name
@@ -7,11 +50,12 @@
 - Document `-l` and `-t` options for cvtsrcpf
 - Fix using source name to CHGOBJD for text description
 - Support referencing variables in compiler parameter overrides
-- Ability to support wildcarding to override the rule to make a certain types of objects (https://ibm.github.io/ibmi-bob/#/prepare-the-project/rules.mk?id=wildcarding)
+- Ability to support wildcarding to override the rule to make a certain types of objects (https://ibm.github.io/ibmi-tobi/#/prepare-the-project/rules.mk?id=wildcarding)
+- Use license macro for license
 * Fri Jun 14 2024 Irfan Sharif <IrfanSharif@ibm.com> - 2.4.30
 - Fix of a correct error return code when compilation fails
 - Fix stripping of TEXT parameter from filenames
-- Fix empty joblog attributes 
+- Fix empty joblog attributes
 * Fri Apr 12 2024 Edmund Reinhardt <edmund.reinhard@ca.ibm.com> - 2.4.27
 - Support .CMD for pseudo-source for command objects as well as .CMDSRC
 - By requiring 3.9 versions of python and the db2 interface, avoid 
@@ -26,7 +70,7 @@
 * Tue Jan 16 2024 Edmund Reinhardt <edmund.reinhard@ca.ibm.com> - 2.4.25
 - CRTCBLMOD does not support DEFINE() - removed it from flags
 * Tue Jan 16 2024 Edmund Reinhardt <edmund.reinhard@ca.ibm.com> - 2.4.24
-- support importing the member text into %TEXT comments at the top of 
+- support importing the member text into %%TEXT comments at the top of 
   the source stream file using `cvtsrcpf` by 
   Irfan Sharif <IrfanSharif@ibm.com> 
 - support using this member text at the top of the source stream file
@@ -60,13 +104,13 @@
 - logs separated into targetobject.log files and references in joblog.json.
   Updated joblog.json to include properties object, source, object and failed.
 - Changed BNDDIRSRC file extension to BNDDIR.
-- Drop %N which doesn't work on Windows without privileged authority
+- Drop %%N which doesn't work on Windows without privileged authority
 - Add iproj.json so IBMi-BOB is a project
 - Minor document fixes
 * Fri Jul 7 2023 Edmund Reinhardt <edmund.reinhard@ca.ibm.com> - 2.4.16
 - `makei cvtsrcpf -l` now supports optionally generating stream files
 with lowercase fie names.
-- Fixes https://github.com/IBM/ibmi-bob/issues/236 DTAARA now supported
+- Fixes https://github.com/IBM/ibmi-tobi/issues/236 DTAARA now supported
 * Fri Jun 30 2023 Edmund Reinhardt <edmund.reinhard@ca.ibm.com> - 2.4.15
 - `makei cvtsrcpf` now supports library and source physical file names
   specified in lower case.
@@ -80,23 +124,23 @@ with lowercase fie names.
   CL command, that CL command will be executed before or after the
   compile command.  Typically this is done using a
   'MYTARGET.PGM: private precmd = MYCUSTOMCL' rule in the Rules.mk
-  This implements https://github.com/IBM/ibmi-bob/issues/208
+  This implements https://github.com/IBM/ibmi-tobi/issues/208
 - The overriding of OBJLIB and TGTCCSID using .ibmi.json in
   a subdirectory needed to be restored. Fixed through
-  https://github.com/IBM/ibmi-bob/pull/229
+  https://github.com/IBM/ibmi-tobi/pull/229
 * Thu Apr 27 2023 Edmund Reinhardt <edmund.reinhard@ca.ibm.com> - 2.4.12
 - Support rules with no dependencies, which is useful for custom recipes.
-  Addresses https://github.com/IBM/ibmi-bob/issues/223
+  Addresses https://github.com/IBM/ibmi-tobi/issues/223
 - Support the splitting of lines using escaped newlines as described by
   https://www.gnu.org/software/make/manual/make.html#Splitting-Lines
 * Mon Apr 17 2023 Edmund Reinhardt <edmund.reinhard@ca.ibm.com> - 2.4.11
 - Fix SAVOBJ/RSTOBJ command for crtfrmstmf - failed when deleting files that
-  depend on a PF. https://github.com/IBM/ibmi-bob/issues/215 and 
-  https://github.com/IBM/ibmi-bob/issues/207
+  depend on a PF. https://github.com/IBM/ibmi-tobi/issues/215 and 
+  https://github.com/IBM/ibmi-tobi/issues/207
 - Fix that only last private compile parameter override processed from Rules.mk 
-  took effect.  Documented under https://github.com/IBM/ibmi-bob/issues/201.
+  took effect.  Documented under https://github.com/IBM/ibmi-tobi/issues/201.
 - Support multiple variable assignment operators, fixing 
-  https://github.com/IBM/ibmi-bob/issues/194
+  https://github.com/IBM/ibmi-tobi/issues/194
 * Mon Mar 6 2023 Edmund Reinhardt <edmund.reinhard@ca.ibm.com> - 2.4.10
 - Support CRTSQLCPPI and additional parameters for CMOD 
 - Support CVTCCSID and TGTCCSID for CCSID support of C and CPP
@@ -114,7 +158,7 @@ with lowercase fie names.
   job and lose the joblog.json info
 * Tue Jan 17 2023 Edmund Reinhardt <edmund.reinhard@ca.ibm.com> - 2.4.7
 - Improve project structure and automate release process.  See the documentation
-  at https://ibm.github.io/ibmi-bob/#/contributing/getting-started for how to 
+  at https://ibm.github.io/ibmi-tobi/#/contributing/getting-started for how to 
   setup development and run linter and tests and also release using `nox`.  
   Github actions are configured to be triggered when a tag of the vn.n.n-n is 
   pushed to master to publish to the yum repository.
@@ -161,7 +205,7 @@ with lowercase fie names.
 * Mon May 09 2022 Tongkun Zhang <tongkun.zhang@ibm.com> - 2.3.7
 - Fix UTF-8 handling
 * Mon May 09 2022 Tongkun Zhang <tongkun.zhang@ibm.com> - 2.3.6
-- New documentation site is available at https://ibm.github.io/ibmi-bob/
+- New documentation site is available at https://ibm.github.io/ibmi-tobi/
 - Do not generate .ibmi.json when invoking makei cvtsrcpf to avoid
   misleading as to when target CCSID is required
 - Fix the encoding issue(#86) on machines without Utf-8 support

@@ -1,6 +1,6 @@
 ## Changes in Bob v2
 
-The Bob v2 ([IBM/ibmi-bob](https://github.com/IBM/ibmi-bob)) improves many aspects over the Bob v1 ([s4isystems/Bob](https://github.com/s4isystems/Bob)).
+Bob v2 now known as The Object Builder for i (TOBi) ([IBM/ibmi-tobi](https://github.com/IBM/ibmi-tobi)) improves many aspects over original Bob developed by S4i ([s4isystems/Bob](https://github.com/s4isystems/Bob)).
 
 If you previously used Bob v1, the following changes should be noted.
 
@@ -16,9 +16,9 @@ Since Bob v2, we require additional packages to be installed on the IBM i as the
 
 In Bob v1, we install `Bob` by putting all the `Bob` files under `/Build/Bob` and point to it in the makefiles we create for the project.
 
-In Bob v2, we provide the `RPM` package to specify the dependencies and install `Bob` into the system path automatically.
+In TOBi we provide the `RPM` package to specify the dependencies and install `Tobi` into the system path automatically.
 
-Since Bob v2.3.5, you may install Bob using the `yum` package manager
+Since Bob v2.3.5, you may install Bob/Tobi using the `yum` package manager
 
 [More on the install instructions](getting-started/installation.md)
 
@@ -30,13 +30,13 @@ Since Bob v2, we don't create the `Makefile` anymore and we can define a project
 
 ### Metadata Files
 
-- `iproj.json`: we will define a project using `iproj.json`, `Bob` will treat the directory containing this file as the root of the project. [More on the Project Level iproj.json](prepare-the-project/iproj-json.md) 
+- `iproj.json`: we will define a project using `iproj.json`, `Tobi` will treat the directory containing this file as the root of the project. [More on the Project Level iproj.json](prepare-the-project/iproj-json.md) 
 
 - `Rules.mk`: in this file, we specifies the structure of the project (i.e. subdirectories) and the object to be created as well as their dependencies. `Bob` will load those files dynamically and create a single `Makefile` for the `make` program to deal with the dependency relations. [More on creating Rule.mk](prepare-the-project/rules.mk.md) 
 
 - `.ibmi.json`: in this file, we allow developer to override configurations such as target CCSID and object library for the containing directory and its subdirectories.  [More on the directory level metadata .ibmi.json](prepare-the-project/ibmi-json.md) 
 
-A sample project for Bob v2 can be found at [edmundreinhardt/bob-recursive-example](https://github.com/edmundreinhardt/bob-recursive-example).
+A sample project for Bob v2 can be found at [edmundreinhardt/tobi-example](https://github.com/edmundreinhardt/tobi-example).
 
 ### Logs
 

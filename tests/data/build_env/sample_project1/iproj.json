@@ -1,0 +1,11 @@
+{
+  "description": "Test TOBi improvements",
+  "objlib": "OBJLIB",
+  "curlib": "CURLIB",
+  "includePath": ["prototypes", "headers"],
+  "preUsrlibl": ["testlib1, testlib2"],
+  "postUsrlibl": ["testlib3, testlib4"],
+  "buildCommand": "makei build",
+  "compileCommand": "makei compile -f {filename}",
+  "setIBMiEnvCmd": ["CALL accounting/SETUP", "CALL devtools/INIT" ]
+}

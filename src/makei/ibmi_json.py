@@ -36,18 +36,17 @@ class IBMiJson:
                     version = data["version"]
                 else:
                     version = None
+                # Initialize with parent values
+                tgt_ccsid = parent_ibm_i_json.build["tgt_ccsid"]
+                objlib = parent_ibm_i_json.build["objlib"]
                 if "build" in data:
                     build = data["build"]
                     if "tgtCcsid" in build:
                         tgt_ccsid = build["tgtCcsid"]
-                    else:
-                        tgt_ccsid = parent_ibm_i_json.build["tgt_ccsid"]
                     # if tgt_ccsid is None:
                     #     tgt_ccsid= "*JOB"
                     if "objlib" in build:
                         objlib = parse_all_variables(build["objlib"])
-                    else:
-                        objlib = parent_ibm_i_json.build["objlib"]
 
                 return IBMiJson(version, {"tgt_ccsid": tgt_ccsid, "objlib": objlib})
         else:
@@ -74,11 +73,12 @@ class IBMiJson:
 
     def copy(self) -> "IBMiJson":
         """Returns a copy of the IBMiJson object"""
-        return IBMiJson(self.version, self.build)
+        import copy as copy_module
+        return IBMiJson(self.version, copy_module.deepcopy(self.build))
 
     def save(self, file_path: str) -> None:
         """Saves the IBMiJson object to a file"""
         if not Path(file_path).exists():
             Path(file_path).touch()
         with open(file_path, 'w', encoding="utf-8") as f:
-            json.dump(self.__dict__, f, indent=4)
+            json.dump(self.__dict__(), f, indent=4)

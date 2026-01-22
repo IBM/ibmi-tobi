@@ -5,14 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "bob utils",
+            "name": "tobi utils",
             "type": "python",
             "program": "makei/utils.py",
             "request": "launch",
             "env": {"PYTHONPATH": "."}
         },
         {
-            "name": "bob init",
+            "name": "tobi init",
             "type": "python",
             "program": "makei/init_project.py",
             "request": "launch",

@@ -28,10 +28,9 @@ def test(session: nox.Session):
     session.install("-r", REQUIREMENTS["tests"])
 
     # Parallelize tests as much as possible, by default.
-    arguments = session.posargs
     session.env['PYTHONPATH'] = PYTHONPATH
     print(session.env['PYTHONPATH'])
-    session.run("pytest", *arguments, env={"LC_CTYPE": "en_US.UTF-8"})
+    session.run("pytest", "./tests/unit/local", env={"LC_CTYPE": "en_US.UTF-8"})
 
 
 VENV_DIR = Path('./.venv').resolve()
@@ -143,7 +142,7 @@ def publish(session: nox.Session) -> None:
     current_version, _ = _get_version(session)
 
     changelog_file = Path("CHANGELOG").resolve()
-    spec_file = Path("bob.spec").resolve()
+    spec_file = Path("tobi.spec").resolve()
 
     session.log(f"Generating the spec file for v{current_version}")
 

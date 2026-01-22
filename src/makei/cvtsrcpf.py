@@ -206,8 +206,9 @@ def _get_attr(filepath: str, defaultCcsid: str):
         raise Exception(f"Unable to access '{filepath}' make sure file exists and that the user has permissions to it")
     else:
         for attr in output.split("\n"):
-            [key, value] = attr.split("=")
-            attrs[key] = value
+            if "=" in attr:
+                [key, value] = attr.split("=")
+                attrs[key] = value
     return attrs
 
 

@@ -1,6 +1,6 @@
 # Installing IBM i Prerequisites
 
-Some software needs to be installed on the IBM i before Bob can be used to compile software.
+Some software needs to be installed on the IBM i before TOBi can be used to compile software.
 
 
 ## Install PASE
@@ -18,7 +18,7 @@ The build system uses Unix and GNU tools, which run inside of PASE, so PASE must
 
 ## Install IBM i Open Source Technologies
 
-IBM provides many open source technologies ported to work on IBM i. Bob depends on a few of them, namely bash, make-gnu, python3, gawk, grep-gnu, sed-gnu, coreutils-gnu, python3-ibm_db.
+IBM provides many open source technologies ported to work on IBM i. TOBi depends on a few of them, namely bash, make-gnu, python3, gawk, grep-gnu, sed-gnu, coreutils-gnu, python3-ibm_db.
 
 One of the easier ways to manage the open-source tools is through ACS. Here are some instructions on [how to install and manage the open-source packages](https://www.ibm.com/support/pages/getting-started-open-source-package-management-ibm-i-acs)
 
@@ -74,7 +74,7 @@ CALL QSYS2.SET_PASE_SHELL_INFO('*CURRENT', '/QOpenSys/pkgs/bin/bash')
 
 ## TGTCCSID support on the ILE RPG and COBOL compilers
 
-BOB supports specifying the EBCDIC CCSID to compile the source in. This requires the TGTCCSID parameter on the RPG and COBOL compiler commands. Details of which PTFs are needed on which release are found [here](prepare-the-project/compiler-specific.md).
+TOBi supports specifying the EBCDIC CCSID to compile the source in. This requires the TGTCCSID parameter on the RPG and COBOL compiler commands. Details of which PTFs are needed on which release are found [here](prepare-the-project/compiler-specific.md).
 
 ## Ensure the SSH daemon is running
 
@@ -89,7 +89,7 @@ STRTCPSVR SERVER(*SSHD)
 
 ## Use an internet time server to keep timestamps in sync
 
-Bob uses gmake, which compares the timestamps of source and their compiled objects to determine exactly what needs to get compiled. If you are synchronizing your source to IFS from your IDE or PC workspace, it is important that they agree on what time it is. The following commands can be used to set up the NTP server to synchronize clocks to an internet server.
+TOBi uses gmake, which compares the timestamps of source and their compiled objects to determine exactly what needs to get compiled. If you are synchronizing your source to IFS from your IDE or PC workspace, it is important that they agree on what time it is. The following commands can be used to set up the NTP server to synchronize clocks to an internet server.
 
 ```cl
 CHGNTPA RMTSYS('0.us.pool.ntp.org') POLLITV(1)

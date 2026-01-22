@@ -43,7 +43,9 @@ class IBMJob():
                 if not ignore_errors:
                     print(f"[FAILED]  {cmd}")
                     raise
-                return False
+                    return False
+                else:
+                    return True
 
     def run_sql(self, sql, ignore_errors=False, log: bool = False):
         with closing(self.conn.cursor()) as cursor:
@@ -101,13 +103,18 @@ def get_joblog_for_job(job_id: str) -> List[Dict[str, Any]]:
     return joblog_dict
 
 
-def save_joblog_json(cmd: str, cmd_time: str, jobid: str, object: str, source: str, output: str,
+def default_filter_func(record: Dict[str, Any]) -> bool:
+    _ = record
+    return True
+
+
+def save_joblog_json(cmd: str, cmd_time: str, jobid: str, build_object: str, source: str, output: str,
                      failed: bool, joblog_json: Optional[str],
-                     filter_func: Callable[[Dict[str, Any]], bool] = None):
+                     filter_func: Callable[[Dict[str, Any]], bool] = default_filter_func):
     records = get_joblog_for_job(jobid)
     messages = []
     for record in records:
-        if filter_func is not None and not filter_func(record):
+        if not filter_func(record):
             continue
         if "not safe for a multithreaded job" in record["MESSAGE_TEXT"]:
             continue
@@ -130,7 +137,7 @@ def save_joblog_json(cmd: str, cmd_time: str, jobid: str, object: str, source: s
         "cmd": cmd,
         "cmd_time": cmd_time,
         "msgs": messages,
-        "object": object,
+        "object": build_object,
         "source": source,
         "output": output,
         "failed": failed

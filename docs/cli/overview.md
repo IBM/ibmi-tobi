@@ -1,6 +1,6 @@
 # CLI Overview
 
-`Bob` exposes two standalone CLI programs.
+`TOBi` exposes two standalone CLI programs.
 
 - `makei`
 - `crtfrmstmf`

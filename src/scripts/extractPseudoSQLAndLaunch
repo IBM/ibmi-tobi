@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+joblog_json=$1
+cmd=$2
+precmd=$3
+postcmd=$4
+object=$5
+source=$6
+output=$7
+text_command=$8
+VPATH=$9
+temp_file=${10}
+
+objectExists="false"
+shouldProcess="true"
+
+IFS=":"
+for dir in $VPATH;
+do
+  if [[ -e "$dir/$object" ]]; then
+    objectExists="true"
+  fi
+done
+
+while read -r line; do
+  if [[ "$line" == *"{"* ]]; then
+    if [[ "$objectExists" = "false" ]]; then
+      shouldProcess="false"
+    fi 
+    continue
+  elif [[ "$line" == *"}"* ]]; then
+    if [[ "$objectExists" = "false" ]]; then
+      shouldProcess="true"
+      continue
+    else
+      break
+    fi
+  fi
+
+  if [[ "$shouldProcess" = "true" ]]; then
+      echo "$line" >> $temp_file
+  fi
+done < <(grep "" $source)
+
+"$SCRIPT_DIR"/launch "$joblog_json" "$cmd" "$precmd" "$postcmd" "$object" "$source" "$output" "" "$text_command"

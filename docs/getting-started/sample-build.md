@@ -1,6 +1,6 @@
 # Build the sample project
 
-Now that everything is installed and configured, let's build a [sample project](https://github.com/ibm/bob-recursive-example).
+Now that everything is installed and configured, let's build a [sample project](https://github.com/ibm/tobi-example).
 
 ## Perform a build
 
@@ -14,14 +14,14 @@ Now that everything is installed and configured, let's build a [sample project](
 1. **Create a library to build to.**
 
    ```cl
-   system "CRTLIB LIB(BOBTEST) TEXT('Better Object Builder test project')"
+   system "CRTLIB LIB(TOBITEST) TEXT('The Object Builder for i test project')"
    ```
    
 1. **Get the source from a sample git project**
 
    ```shell
-   git clone https://github.com/ibm/bob-recursive-example
-   cd bob-recursive-example
+   git clone https://github.com/ibm/tobi-example
+   cd tobi-example
    ```
 
    If you didn't have git, simply do a `yum install git` to get it.
@@ -29,7 +29,7 @@ Now that everything is installed and configured, let's build a [sample project](
 1. **Set an environment variable to point to the library you created**
 
    ```shell
-   export lib1=BOBTEST
+   export lib1=TOBITEST
    ```
 
 1. **Run the build using:**
@@ -41,16 +41,16 @@ Now that everything is installed and configured, let's build a [sample project](
 > [!TIP]
 >
 > Alternatively, you may combine the above two commands using makei's shortcut:<br>
-> `makei b -e lib1=BOBTEST`
+> `makei b -e lib1=TOBITEST`
 
 1. **You should see output similar to this.**
 
   ```
-   $ makei b -e lib1=BOBTEST
-   Set variable <lib1> to 'BOBTEST'
-   > make -k BUILDVARSMKPATH="/tmp/tmpigspspcr" -k BOB="/home/tongkun/git/ibmi-bob" -f "/home/tongkun/git/ibmi-bob/mk/Makefile" all
+   $ makei b -e lib1=TOBITEST
+   Set variable <lib1> to 'TOBITEST'
+   > make -k BUILDVARSMKPATH="/tmp/tmpigspspcr" -k TOBI_PATH="/home/tongkun/git/ibmi-tobi" -f "/home/tongkun/git/ibmi-tobi/mk/Makefile" all
    === Creating RPG module [XML001.RPGLE]
-   crtrpgmod module(BOBTEST/XML001) srcstmf('/home/tongkun/git/bob-recursive-example/QRPGLESRC/XML001.RPGLE') AUT() DBGVIEW(*ALL) OPTION(*EVENTF) OUTPUT(*PRINT) TEXT('') TGTCCSID(297) TGTRLS()
+   crtrpgmod module(TOBITEST/XML001) srcstmf('/home/tongkun/git/tobi-example/QRPGLESRC/XML001.RPGLE') AUT() DBGVIEW(*ALL) OPTION(*EVENTF) OUTPUT(*PRINT) TEXT('') TGTCCSID(297) TGTRLS()
    ✓ XML001.MODULE was created successfully!
    ...
    ...

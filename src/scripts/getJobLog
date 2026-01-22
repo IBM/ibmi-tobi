@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 SCRIPT_DIR="$(dirname "$0")"
-BOB_DIR=$(realpath "${SCRIPT_DIR}/../..")
+TOBI_DIR=$(realpath "${SCRIPT_DIR}/../..")
 
-PYTHONPATH="${BOB_DIR}/src":${PYTHONPATH} python3 "${BOB_DIR}/src/makei/cli/get_joblog.py" "$@"
+PYTHONPATH="${TOBI_DIR}/src":${PYTHONPATH} /QOpenSys/pkgs/bin/python3.9 "${TOBI_DIR}/src/makei/cli/get_joblog.py" "$@"

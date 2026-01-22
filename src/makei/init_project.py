@@ -112,7 +112,7 @@ class ProjSpec():
     def generate_rules_mk(self) -> str:
         """ Generates a Rules.mk template"""
         return '\n'.join(['# Check out the documentation on creating the rules at ' +
-                          'https://ibm.github.io/ibmi-bob/#/prepare-the-project/rules.mk',
+                          'https://ibm.github.io/ibmi-tobi/#/prepare-the-project/rules.mk',
                           "SUBDIRS :=",
                           ])
 

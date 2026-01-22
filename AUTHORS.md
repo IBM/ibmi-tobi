@@ -1,4 +1,4 @@
-# Better Object Builder Authors
+# The Object Builder Authors
 
 * Jeff Berman:
   [Email](mailto:jeff@gonif.org)  |

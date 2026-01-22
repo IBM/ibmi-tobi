@@ -11,7 +11,7 @@ while read -r line; do
   line=$(echo "$line" | sed 's/\r//')
   if [[ $line = '/*'* ]]; then continue; fi
   if [[ $line = '' ]]; then continue; fi
-  if [[ $line =~ .*\+\S* ]]; then
+  if [[ $line =~ .*\+\S*$ ]]; then
     linetmp=$(echo "$line" | sed 's/\+\S*$//')
     cmd="${cmd} ${linetmp}"
     continue

@@ -1,6 +1,6 @@
 # Documentation
 
-All the documentations for bob can be found in the root level `docs` directory. The documentation site is generated using [docsify](https://docsify.js.org/).
+All the documentations for TOBi can be found in the root level `docs` directory. The documentation site is generated using [docsify](https://docsify.js.org/).
 
 
 
