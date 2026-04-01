@@ -117,7 +117,7 @@ def parse_all_variables(input_str: str) -> str:
     return result
 
 
-def objlib_to_path(lib, object_name=None) -> str:
+def objlib_to_path(lib, object_name=None, iasp: str = "") -> str:
     """Returns the path for the given objlib in IFS
 
     >>> objlib_to_path("TONGKUN")
@@ -125,14 +125,15 @@ def objlib_to_path(lib, object_name=None) -> str:
     >>> objlib_to_path("TONGKUN", "SAMREF.FILE")
     '/QSYS.LIB/TONGKUN.LIB/SAMREF.FILE'
     """
+    iasp_prefix = get_iasp_prefix(iasp)
     if not lib:
         raise ValueError()
     if lib == "QSYS":
-        return f"/QSYS.LIB/{object_name}"
+        return f"{iasp_prefix}/QSYS.LIB/{object_name}"
     if object_name is not None:
-        return f"/QSYS.LIB/{lib}.LIB/{object_name}"
+        return f"{iasp_prefix}/QSYS.LIB/{lib}.LIB/{object_name}"
     lib = lib.replace("#", "\\#")
-    return f"/QSYS.LIB/{lib}.LIB"
+    return f"{iasp_prefix}/QSYS.LIB/{lib}.LIB"
 
 
 def create_temp_file(file_name: str) -> Path:
@@ -382,6 +383,10 @@ def make_include_dirs_absolute(job_log_path: str, parameters: str):
     start_of_param_string = parameters[0:start_of_inc_dir + 1]
     end_of_param_string = parameters[end_of_inc_dir:]
     return start_of_param_string + " ".join(include_path) + end_of_param_string
+
+
+def get_iasp_prefix(iasp: str) -> str:
+    return f"/{iasp}" if iasp else ""
 
 
 # Returns the line number where the keyword was found at (starting at 1), otherwise 0

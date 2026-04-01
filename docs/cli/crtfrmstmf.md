@@ -41,4 +41,3 @@ usage: crtfrmstmf [-h] -f <srcstmf> -o <object> [-l <library>] -c <cmd> [-p [<pa
 - **--save-joblog**
 
   Output the joblog to the specified json file.
-

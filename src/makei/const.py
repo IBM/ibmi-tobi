@@ -4,7 +4,7 @@ from pathlib import Path
 DEFAULT_TGT_CCSID = "*JOB"
 DEFAULT_OBJLIB = "*CURLIB"
 DEFAULT_CURLIB = "*CRTDFT"
-
+DEFAULT_IASP = ""
 TOBI_PATH = Path(__file__).resolve().parent.parent.parent
 MK_PATH = TOBI_PATH / "src" / "mk"
 

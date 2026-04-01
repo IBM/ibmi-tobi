@@ -7,6 +7,7 @@ postUsrlibl := testlib3, testlib4
 INCDIR := 'prototypes' 'headers'
 unquotedINCDIR := prototypes headers
 doublequotedINCDIR := ''prototypes'' ''headers''
+iasp := 
 IBMiEnvCmd := CALL accounting/SETUP\nCALL devtools/INIT
 COLOR_TTY := false
 

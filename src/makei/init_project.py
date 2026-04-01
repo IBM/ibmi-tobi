@@ -10,7 +10,7 @@ from pathlib import Path
 import os
 from typing import List, Optional
 
-from makei.const import DEFAULT_CURLIB, DEFAULT_TGT_CCSID, DEFAULT_OBJLIB
+from makei.const import DEFAULT_CURLIB, DEFAULT_TGT_CCSID, DEFAULT_OBJLIB,  DEFAULT_IASP
 from makei.utils import colored, Colors
 from .ibmi_json import IBMiJson
 from .iproj_json import IProjJson
@@ -30,6 +30,7 @@ class ProjSpec():
     post_usr_libl: List[str]
     license: Optional[str]
     set_ibm_i_env_cmd: Optional[str]
+    iasp: str
     tgt_ccsid: str
 
     def __init__(self, objlib, tgt_ccsid):
@@ -51,6 +52,7 @@ class ProjSpec():
             prompt('Post user libraries, separated by commas', ""))
         self.set_ibm_i_env_cmd = self._input_str_to_list(prompt(
             'Set up commands to be executed, separated by commas', ""))
+        self.iasp = prompt('iasp', DEFAULT_IASP)
         self.license = prompt('license', "")
         # except Exception:
         #     print(colored("\nInvalid input", Colors.FAIL))
@@ -91,6 +93,7 @@ class ProjSpec():
                                self.pre_usr_libl,
                                self.post_usr_libl,
                                self.set_ibm_i_env_cmd,
+                               self.iasp,
                                self.tgt_ccsid)
         return json.dumps(iproj_json.__dict__(), indent=4)
 

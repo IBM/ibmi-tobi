@@ -215,3 +215,170 @@ def test_object_creation_in_hash_library():
         assert obj_name in path
         assert obj_type in path
         assert "#" in path
+
+def test_iproj_json_with_iaspobjlib_library():
+    """Test IProjJson with iasp objlib"""
+    iproj_json = IProjJson(
+        description="Test project with IASP library in objlib",
+        version="1.0.0",
+        iasp="IASP1",
+        objlib="IASPT1",
+        curlib="IASPT1",
+        set_ibm_i_env_cmd=["SETASPGRP ASPGRP(IASP1)"]
+    )
+    
+    assert iproj_json.objlib == "IASPT1"
+    assert iproj_json.curlib == "IASPT1"
+    assert iproj_json.iasp == "IASP1"
+
+def test_member_creation_with_iasp():
+    """Test IProjJson with iasp library"""
+    lib = "IASPT1"
+    iasp = "IASP1"
+    obj = "SAMREF.FILE"
+    path = objlib_to_path(lib, obj,iasp)
+    
+    # Simulate compile command path
+    assert f"/{iasp}/QSYS.LIB/{lib}.LIB/{obj}" == path
+
+def test_object_creation_in_iasp_library():
+    """Test object creation paths in iasp library"""
+    lib = "IASPT1"
+    objects = {
+        "MYPGM": "PGM",
+        "MYMOD": "MODULE",
+        "MYSRV": "SRVPGM",
+        "MYFILE": "FILE"
+    }
+    iasp = "IASP1"
+    
+    for obj_name, obj_type in objects.items():
+        full_obj = f"{obj_name}.{obj_type}"
+        path = objlib_to_path(lib, full_obj,iasp)
+        
+        assert lib in path
+        assert obj_name in path
+        assert obj_type in path
+        assert iasp in path
+
+
+def test_objlib_to_path_with_iasp_basic():
+    """Test objlib_to_path with IASP - basic library path"""
+    lib = "TESTLIB"
+    iasp = "IASP1"
+    path = objlib_to_path(lib, iasp=iasp)
+    
+    assert path == f"/{iasp}/QSYS.LIB/{lib}.LIB"
+    assert iasp in path
+    assert lib in path
+
+
+def test_objlib_to_path_with_iasp_and_object():
+    """Test objlib_to_path with IASP and object"""
+    lib = "TESTLIB"
+    obj = "TESTPGM.PGM"
+    iasp = "IASP1"
+    path = objlib_to_path(lib, obj, iasp)
+    
+    assert path == f"/{iasp}/QSYS.LIB/{lib}.LIB/{obj}"
+    assert iasp in path
+    assert lib in path
+    assert obj in path
+
+
+def test_objlib_to_path_without_iasp():
+    """Test objlib_to_path without IASP (default behavior)"""
+    lib = "TESTLIB"
+    obj = "TESTPGM.PGM"
+    path = objlib_to_path(lib, obj, iasp="")
+    
+    assert path == f"/QSYS.LIB/{lib}.LIB/{obj}"
+    assert "/IASP" not in path
+
+
+def test_objlib_to_path_with_iasp_and_hash():
+    """Test objlib_to_path with both IASP and # in library name"""
+    lib = "TEST#LIB"
+    iasp = "IASP1"
+    path = objlib_to_path(lib, iasp=iasp)
+    
+    # Should escape # and include IASP prefix
+    escaped_lib = lib.replace('#', '\\#')
+    assert path == f"/{iasp}/QSYS.LIB/{escaped_lib}.LIB"
+    assert iasp in path
+    assert "\\#" in path
+
+def test_objlib_to_path_iasp_with_file_types():
+    """Test objlib_to_path with IASP for different object types"""
+    lib = "TESTLIB"
+    iasp = "IASP1"
+    objects = {
+        "TESTPGM.PGM": "program",
+        "TESTMOD.MODULE": "module",
+        "TESTSRV.SRVPGM": "service program",
+        "TESTFILE.FILE": "physical file",
+        "TESTCMD.CMD": "command",
+        "TESTMENU.MENU": "menu"
+    }
+    
+    for obj, obj_desc in objects.items():
+        path = objlib_to_path(lib, obj, iasp)
+        assert path == f"/{iasp}/QSYS.LIB/{lib}.LIB/{obj}"
+        assert iasp in path, f"IASP missing for {obj_desc}"
+        assert obj in path, f"Object missing for {obj_desc}"
+
+
+def test_objlib_to_path_iasp_empty_string():
+    """Test objlib_to_path with empty IASP string (should behave like no IASP)"""
+    lib = "TESTLIB"
+    obj = "TESTPGM.PGM"
+    iasp = ""
+    path = objlib_to_path(lib, obj, iasp)
+    
+    assert path == f"{iasp}/QSYS.LIB/{lib}.LIB/{obj}"
+    assert not path.startswith("//")  # No double slash
+
+
+def test_objlib_to_path_iasp_with_source_files():
+    """Test objlib_to_path with IASP for source files"""
+    lib = "QRPGLESRC"
+    member = "TESTPGM.MBR"
+    iasp = "IASP1"
+    
+    # Source file path
+    srcfile_path = objlib_to_path(lib, "QRPGLESRC.FILE", iasp)
+    assert srcfile_path == f"/{iasp}/QSYS.LIB/{lib}.LIB/QRPGLESRC.FILE"
+    
+    # Member path would be constructed differently in actual use
+    full_member_path = f"{srcfile_path}/{member}"
+    assert iasp in full_member_path
+    assert member in full_member_path
+
+
+def test_objlib_to_path_iasp_library_list_scenario():
+    """Test objlib_to_path with IASP in library list scenario"""
+    iasp = "IASP1"
+    libraries = ["QSYS", "QGPL", "TESTLIB1", "TESTLIB2", "PRODLIB"]
+    
+    paths = []
+    for lib in libraries:
+        if lib == "QSYS":
+            # QSYS typically doesn't need full path in library list
+            continue
+        path = objlib_to_path(lib, iasp=iasp)
+        paths.append(path)
+        assert f"/{iasp}/QSYS.LIB/{lib}.LIB" == path
+    
+    assert len(paths) == len(libraries) - 1  # Excluding QSYS
+
+
+def test_objlib_to_path_iasp_with_numeric_names():
+    """Test objlib_to_path with IASP containing numbers"""
+    lib = "LIB001"
+    obj = "PGM001.PGM"
+    iasp = "IASP001"
+    
+    path = objlib_to_path(lib, obj, iasp)
+    assert path == f"/{iasp}/QSYS.LIB/{lib}.LIB/{obj}"
+    assert "001" in path  # Verify numbers are preserved
+

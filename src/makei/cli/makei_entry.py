@@ -10,8 +10,9 @@ from makei import __version__
 from makei import init_project
 from makei.build import BuildEnv
 from makei.cvtsrcpf import CvtSrcPf
-from makei.utils import Colors, colored, decompose_filename, escape_special_chars
+from makei.utils import Colors, colored, decompose_filename
 from pathlib import Path
+from makei.iproj_json import IProjJson
 
 
 def cli():
@@ -221,26 +222,30 @@ def handle_info(args):
     print("Not implemented!")
 
 
-def read_and_filter_rules_mk(source_names):
-    """
-    Read the Rules.mk file and return targets that match allowed extensions.
-    """
+def extract_subdirs_from_rules_mk(rules_mk_path):
+    """Extract SUBDIRS list from a Rules.mk file."""
+    with rules_mk_path.open("r") as f:
+        for line in f:
+            line_stripped = line.strip()
+            if line_stripped.startswith('SUBDIRS'):
+                # Extract subdirs: "SUBDIRS = dir1 dir2" or "SUBDIRS := dir1 dir2"
+                subdir_list = line_stripped.split('=', 1)[1].strip().split()
+                return subdir_list
+    return []
+
+
+def parse_rules_mk_for_targets(rules_mk_path, filename_upper, show_location=False, first_only=False):
+    """Parse Rules.mk file and return targets matching the given filename."""
     build_targets = []
-    source_path = Path(source_names[0])
-    name, _, ext, _ = decompose_filename(source_names[0])
-    rules_mk_path = Path(source_names[0]).parent / "Rules.mk"
-    if not rules_mk_path.exists():
-        raise FileNotFoundError(f"No Rules.mk found at {rules_mk_path}")
     with rules_mk_path.open("r") as f:
         for raw_line in f:
             line = raw_line.strip()
             if not line or line.startswith("#") or ":" not in line:
                 continue  # skip blank lines, comments, or malformed lines
             target, deps = map(str.strip, line.split(":", 1))
-            dep_list = [dep.upper().replace(r'\#', '#') for dep in deps.split()]
+            dep_list = [dep.upper() for dep in deps.split()]
             if source_path.name.upper() in dep_list:
-                escaped_target = escape_special_chars(target)
-                build_targets.append(escaped_target)
+                build_targets.append(target)
     if not build_targets:
         raise ValueError(f"No target found in Rules.mk for source file '{source_path.name}'")
     return build_targets
@@ -260,13 +265,12 @@ def handle_compile(args):
     else:
         filenames = []
     targets = []
-    source_names = []
     for name in filenames:
         if os.path.isdir(name):
             targets.append(make_dir_target(name))
         else:
-            source_names.append(name)
-            targets_from_rule = read_and_filter_rules_mk(source_names)
+            # Pass each file individually to read_and_filter_rules_mk
+            targets_from_rule = read_and_filter_rules_mk([name])
             targets.extend([t.upper() for t in targets_from_rule])
     targets1 = ([t.upper().replace('HASHESCAPE_', '#').replace('DOLLARESCAPE_', '$') for t in targets])
     print(colored("targets: " + ', '.join(targets1), Colors.OKBLUE))
@@ -316,7 +320,12 @@ def handle_cvtsrcpf(args):
     """
     if args.log:
         print(colored("Warning: --trace has no effect on 'cvtsrcpf' command.", Colors.WARNING))
-    CvtSrcPf(args.file, args.library, args.tolower, args.ccsid, args.text).run()
+    iasp = ""
+    iproj_path = Path.cwd() / "iproj.json"
+    if iproj_path.exists():
+        iproj = IProjJson.from_file(iproj_path)
+        iasp = iproj.iasp
+    CvtSrcPf(args.file, args.library, args.tolower, args.ccsid, args.text, iasp=iasp).run()
 
 
 def get_override_vars(args):

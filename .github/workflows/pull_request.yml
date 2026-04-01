@@ -101,3 +101,88 @@ jobs:
           IBMI_USER: ${{ secrets.IBMI_USER }}
           IBMI_PASSWORD: ${{ secrets.IBMI_PASSWORD }}
           IBMI_SSH_PORT: ${{ secrets.IBMI_SSH_PORT }}
+
+  # Build projects under IASP with second user profile - runs after project-build completes
+  iasp-project-build:
+    name: IASP Build ${{ matrix.project.name }}
+    runs-on: ubuntu-latest
+    needs: project-build  # Waits for project-build to complete successfully
+    environment: COMMON1
+    strategy:
+      matrix:
+        project:
+          - {
+              name: tobi-example,
+              branch: integration-test,
+              lib: lib1,
+              iasp: GALAXY,
+              directory: functionsVAT,
+              file: vat300.rpgle,
+              firstBuild: "0 failed 127 succeed 127 total",
+              secondBuild: "0 failed 5 succeed 5 total",
+              firstCompile: "0 failed 1 succeed 1 total",
+              secondCompile: "0 failed 2 succeed 2 total"
+            }
+          - {
+              name: ibmi-company_system,
+              branch: main,
+              lib: CURLIB,
+              iasp: GALAXY,
+              directory: qrpglesrc,
+              file: MYPGM.PGM.RPGLE,
+              firstBuild: "0 failed 15 succeed 15 total",
+              secondBuild: "0 failed 1 succeed 1 total",
+              firstCompile: "0 failed 1 succeed 1 total",
+              secondCompile: "0 failed 1 succeed 1 total"
+          }
+    steps:
+      - name: Checkout ibmi-tobi
+        uses: actions/checkout@v4
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+      - name: Install Dependencies
+        run: |
+          npm i -g @ibm/ibmi-ci
+          npm i -g @ibm/sourceorbit
+      - name: Deploy to IBM i with Second User and IASP
+        run: |
+          ici \
+            --cmd "echo Setting up tobi for second user..." \
+            --cmd "mkdir -p './builds/github_ci/${GITHUB_SHA}/ibmi_tobi_iasp'" \
+            --rcwd "./builds/github_ci/${GITHUB_SHA}/ibmi_tobi_iasp" \
+            --push "." \
+            --cmd "echo Setting ASP group to ${{ matrix.project.iasp }}..." \
+            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})'" \
+            --cmd "echo Setting up ${{ matrix.project.name }} under IASP ${{ matrix.project.iasp }}..." \
+            --ignore --cl "CRTLIB LIB($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP)) ASPDEV(${{ matrix.project.iasp }})" \
+            --ignore --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && cl CLRLIB $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP)" \
+            --cmd "rm -rf ../${{ matrix.project.name }}_iasp" \
+            --cmd "git clone https://github.com/IBM/${{ matrix.project.name }}.git ../${{ matrix.project.name }}_iasp" \
+            --rcwd "../${{ matrix.project.name }}_iasp" \
+            --cmd "git switch ${{ matrix.project.branch }}" \
+            --cmd "node -e \"const fs=require('fs'); const j=JSON.parse(fs.readFileSync('iproj.json','utf8')); j.iasp='${{ matrix.project.iasp }}'; j.setIBMiEnvCmd=['SETASPGRP ASPGRP(${{ matrix.project.iasp }})']; fs.writeFileSync('iproj.json',JSON.stringify(j,null,2));\"" \
+            --cmd "echo Full build under IASP..." \
+            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei b -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) | tee firstBuild.log" \
+            --cmd "grep '${{ matrix.project.firstBuild }}' firstBuild.log || { echo 'First build of ${{ matrix.project.firstBuild }} failed!'; exit 1; }" \
+            --cmd "echo Touch one file and full build..." \
+            --cmd "touch ${{ matrix.project.directory }}/${{ matrix.project.file }}" \
+            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei b -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) | tee secondBuild.log" \
+            --cmd "grep '${{ matrix.project.secondBuild }}' secondBuild.log || { echo 'Second build of ${{ matrix.project.secondBuild }} failed!'; exit 1; }" \
+            --cmd "echo Touch one file and compile it..." \
+            --cmd "touch ${{ matrix.project.directory }}/${{ matrix.project.file }}" \
+            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei c -f ${{ matrix.project.directory }}/${{ matrix.project.file }} -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) | tee firstCompile.log" \
+            --cmd "grep '${{ matrix.project.firstCompile }}' firstCompile.log || { echo 'First compile of ${{ matrix.project.firstCompile }} failed!'; exit 1; }" \
+            --cmd "echo Touch one file and compile directory..." \
+            --cmd "touch ${{ matrix.project.directory }}/${{ matrix.project.file }}" \
+            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei c -f ${{ matrix.project.directory }} -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) | tee secondCompile.log" \
+            --cmd "grep '${{ matrix.project.secondCompile }}' secondCompile.log || { echo 'Second compile of ${{ matrix.project.secondCompile }} failed!'; exit 1; }" \
+            --cmd "echo Clean up..." \
+            --ignore --cl "DLTLIB LIB($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP)) ASPDEV(${{ matrix.project.iasp }})" \
+            --rcwd "../../../github_ci/" \
+        env:
+          IBMI_HOST: ${{ secrets.IBMI_HOST }}
+          IBMI_USER: ${{ secrets.IASP_USER }}
+          IBMI_PASSWORD: ${{ secrets.IBMI_PASSWORD }}
+          IBMI_SSH_PORT: ${{ secrets.IBMI_SSH_PORT }}

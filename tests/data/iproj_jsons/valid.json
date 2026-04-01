@@ -4,9 +4,10 @@
     "includePath": ["libs"],
     "preUsrlibl": ["QSYS"],
     "postUsrlibl": ["QGPL"],
-    "setIBMiEnvCmd": ["CRTBNDRPG PGM(HELLO) SRCFILE(QCLLESRC)"],
+    "setIBMiEnvCmd": ["SETASPGRP ASPGRP(IASP1)", "CRTBNDRPG PGM(HELLO) SRCFILE(QCLLESRC)"],
     "repository": "https://github.com/user/project",
     "license": "MIT",
+    "iasp": "IASP1",
     "tgtCcsid": "1208",
     "extensions" : {
         "custom_extension": {

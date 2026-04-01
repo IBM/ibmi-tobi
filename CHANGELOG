@@ -1,10 +1,13 @@
+* Thu Mar 12 2026 Het Patel <het.patel@ibm.com> - 3.2.1
+- Added a new feature for IASP support.
+- Fixed Label on Table issue.
+- Fixed Compile issue.
 * Fri Jan 23 2026 Het Patel <het.patel@ibm.com> - 3.1.1
 - Added to escape library names containing the # symbol.
 - Fixed source name case sensitivity in `makei compile` and `rules.mk`
 - Renamed references of bob to tobi
 - Renamed bob-recursive-examples to tobi-examples
-- Added support for building SYSTRG sources as TRG objects instead of PGM objects 
-  for `makei c` command.
+- Added support for building SYSTRG sources as TRG objects instead of PGM objects for `makei c` command.
 * Tue Dec 16 2025 Het Patel <het.patel@ibm.com> - 3.1.0
 - Added support to read target names from the `rules.mk` file for the `makei c` command.
 - Added a new recipe to support files with the .sqlvar extension.

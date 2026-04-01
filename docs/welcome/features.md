@@ -117,6 +117,18 @@ The set of SQL commands to create the object is stored in a file with the given 
 
 Generic SQL statements with file extension .SQL are executed using RUNSQLSTM
 
+### TEXT Parameter for SQL Objects
+
+When creating SQL objects (TABLE, PFSQL, etc.), the object text description is determined by:
+1. **TEXT in Rules.mk** - Takes priority if specified
+2. **LABEL ON statement in SQL source** - Used if TEXT is not specified in Rules.mk
+
+Example:
+```make
+Hello.FILE: Hello.table
+Hello.FILE: private TEXT := Custom description
+```
+
 ### Incremental SQL pseudo-source
 
 If you want different source to run if your object is already built, but want to maintain your code in the same file, write that SQL pseudo-source in the incremental block. Only if the object exists in your library list, will the incremental pseudo-source run. Otherwise, source outside of the block will be the one which runs.

@@ -22,6 +22,13 @@ By default the source files will be encoded as UTF-8, but you may use `-c` optio
 
 Before running this tool, verify that the CCSID of the source physical file is set correctly; a value of 65535 can result in an improper conversion.
 
+> [!IMPORTANT]
+> **For IASP Libraries:** If your source physical file resides in an IASP library, you must first set the ASP group in your terminal before running the conversion:
+> ```bash
+> cl "SETASPGRP ASPGRP(IASP1)"
+> ```
+> Replace `IASP1` with your actual IASP name.
+
 [How to use `makei cvtsrcpf` command](cli/makei?id=cvtsrcpf)
 
 There are a couple of other file extension changes that need to be made after converting to stream files.  Any `.RPGLE`  files that are included should be renamed to `.RPGLEINC` so that TOBi knows not to compile them.  It is ambiguous for TOBi to know whether an ILE source is intended to be compiled into a MODULE, PGM or SRVPGM.  TOBi will assume that a MODULE is the default.  If a PGM object is the target using CRTBNDxxx then the file extension should be `PGM.xxx` i.e. PGM.RPGLE for ILE RPG.  As of version 2.4.33 this is suggested by not required as TOBi infers the relationship from the Rules.mk file. i.e. `FOO.PGM: foo.rpgle` would tell it to use `CRTBNDRPG`. See [Supported object types](welcome/features.md?id=supported-object-types) for more discussion of this.

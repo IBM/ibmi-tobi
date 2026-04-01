@@ -201,6 +201,7 @@ def test_projspec_initialization(mock_input):
         "LIB1, LIB2",  # pre_usr_libl
         "LIB3",  # post_usr_libl
         "CHGJOB CCSID(37)",  # set_ibm_i_env_cmd
+        "",  # iasp
         "MIT",  # license
     ]
 
@@ -229,6 +230,7 @@ def test_projspec_with_provided_objlib_and_ccsid(mock_input):
         "",  # pre_usr_libl (empty)
         "",  # post_usr_libl (empty)
         "",  # set_ibm_i_env_cmd (empty)
+        "",  # iasp (empty)
         "",  # license (empty)
     ]
 
@@ -251,6 +253,7 @@ def test_projspec_input_str_to_list(mock_input):
         "LIB1,  LIB2  , LIB3",  # pre_usr_libl with spaces
         "",  # post_usr_libl
         "",  # set_ibm_i_env_cmd
+        "",  # iasp
         "",  # license
     ]
 
@@ -275,6 +278,7 @@ def test_projspec_generate_iproj_json(mock_input):
         "LIB1",
         "LIB2",
         "CHGJOB CCSID(37)",
+        "",  # iasp
         "MIT",
     ]
 
@@ -295,7 +299,7 @@ def test_projspec_generate_iproj_json(mock_input):
 @patch("builtins.input")
 def test_projspec_generate_ibmi_json(mock_input):
     """Test ProjSpec generate_ibmi_json method"""
-    mock_input.side_effect = ["Test", "", "", "LIB", "37", "LIB", "", "", "", ""]
+    mock_input.side_effect = ["Test", "", "", "LIB", "37", "LIB", "", "", "", "", ""]
 
     proj_spec = ProjSpec(None, None)
     ibmi_json_str = proj_spec.generate_ibmi_json()
@@ -320,7 +324,7 @@ def test_projspec_generate_ibmi_json_static():
 @patch("builtins.input")
 def test_projspec_generate_rules_mk(mock_input):
     """Test ProjSpec generate_rules_mk method"""
-    mock_input.side_effect = ["Test", "", "", "LIB", "37", "LIB", "", "", "", ""]
+    mock_input.side_effect = ["Test", "", "", "LIB", "37", "LIB", "", "", "", "", ""]
 
     proj_spec = ProjSpec(None, None)
     rules_mk = proj_spec.generate_rules_mk()
@@ -345,6 +349,7 @@ def test_init_project_new(mock_create_file, mock_input, temp_directory):
                 "",
                 "",
                 "",
+                "",  # iasp
                 "",
                 "yes",  # Confirm creation
             ]
@@ -399,6 +404,7 @@ def test_init_project_cancelled(mock_input, temp_directory):
                 "",
                 "",
                 "",
+                "",  # iasp
                 "",
                 "no",  # Cancel
             ]
@@ -433,6 +439,7 @@ def test_projspec_get_repository_with_git_config(temp_directory):
                 "",
                 "",
                 "",
+                "",  # iasp
                 "",
             ]
 
@@ -456,6 +463,7 @@ def test_projspec_get_repository_without_git(temp_directory):
                 "",
                 "",
                 "",
+                "",  # iasp
                 "",
             ]
 
