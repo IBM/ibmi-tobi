@@ -78,7 +78,27 @@ license for this project
 
 ### iasp
 
-the Independent Auxiliary Storage Pool that should be used when developing this project.  If not specified, it is assumed to be "*SYSBAS".  
+The Independent Auxiliary Storage Pool that should be used when developing this project. If not specified, it is assumed to be "*SYSBAS".
+
+>[!IMPORTANT]
+>**IASP Configuration Requirements:**
+>
+> When working with an IASP, you must configure **both** of the following in your `iproj.json`:
+>
+> 1. **Set the `iasp` field** to your IASP name (e.g., `"iasp": "IASP1"`)
+> 2. **Set the `setIBMiEnvCmd` field** to include the `SETASPGRP` command and export `CURLIB` as your IASP library
+>
+> **Example IASP configuration:**
+> ```json
+> {
+>   "iasp": "IASP1",
+>   "curlib": "MYLIB",
+>   "setIBMiEnvCmd": [
+>     "SETASPGRP ASPGRP(IASP1)"]
+> }
+> ```
+>
+> Without both settings, TOBi will not be able to properly access libraries and objects in the IASP.
 
 ### sql
 
@@ -139,6 +159,7 @@ In this example we have a project with the description of Payrollâ€¯applicationâ
     "preUsrlibl": "&accounting, ACMEUTIL",
     "postUsrlibl": "&tax",
     "setIBMiEnvCmd": ["CALL &accounting/SETUP"],
+    "iasp": "IASP1",
     "repository" : "https://github.com/acme/backoffice",
     "extensions": {
         "arcad": {

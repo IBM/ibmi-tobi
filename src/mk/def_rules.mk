@@ -543,6 +543,7 @@ curlib="$(curlib)" \
 preUsrlibl="$(preUsrlibl)" \
 postUsrlibl="$(postUsrlibl)" \
 IBMiEnvCmd="$(IBMiEnvCmd)" \
+iasp="$(iasp)"\
 $(eval directory := $(subst /,_,$(patsubst $(SRCPATH)/%,%,$(dir $<)))) \
 $(eval directory := $(if $(filter ._,$(directory)),,$(directory))) \
 $(eval file := $(subst .,_,$(notdir $@))) \
@@ -1240,7 +1241,7 @@ define TABLE_TO_FILE_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL TABLE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd := CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call replace_DOLLARESCAPE,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call replace_DOLLARESCAPE,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1254,7 +1255,7 @@ define PFSQL_TO_FILE_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL PFSQL $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd := CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1268,7 +1269,7 @@ define VIEW_TO_FILE_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL VIEW $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd := CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1280,7 +1281,7 @@ define INDEX_TO_FILE_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL INDEX $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd := CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1292,7 +1293,7 @@ define SQLUDT_TO_FILE_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL UDT $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd := CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1304,7 +1305,7 @@ define SQLALIAS_TO_FILE_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL ALIAS $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd := CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1328,7 +1329,7 @@ define SQLSEQ_TO_DTAARA_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL SEQUENCE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd := CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*DTAARA) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*DTAARA) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1499,7 +1500,7 @@ define SQLPRC_TO_PGM_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL PROCEDURE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd := CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*PGM) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*PGM) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1510,7 +1511,7 @@ define SQLTRG_TO_PGM_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL TRIGGER $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd :=  CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*PGM) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd :=  $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*PGM) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1666,7 +1667,7 @@ define SQLUDF_TO_SRVPGM_RECIPE =
 	@$(call echo_cmd,"=== Creating SQL UDF $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd := CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*SRVPGM) TEXT('$(subst ','',$(TEXT))'))
+	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*SRVPGM) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1820,6 +1821,7 @@ test:
 	echo "OBJLIB:			$(call ESCAPE_FOR_RECIPE,$(OBJLIB))"; \
 	echo "LIBL:			$(call ESCAPE_FOR_RECIPE,$(OBJLIB))"; \
 	echo "IBMiEnvCmd:		$(IBMiEnvCmd)"; \
+	echo "iasp:				$(iasp)"; \
 	echo "IBMiRelease:		$(IBMiRelease)"; \
 	echo "COMPATIBILITYMODE:$(COMPATIBILITYMODE)"; \
 	echo "INCDIR:           $(INCDIR)"; \

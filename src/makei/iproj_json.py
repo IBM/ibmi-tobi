@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-from makei.const import DEFAULT_CURLIB, DEFAULT_OBJLIB
+from makei.const import DEFAULT_CURLIB, DEFAULT_OBJLIB, DEFAULT_IASP
 from makei.utils import parse_all_variables, Colors, colored
 
 JsonType = Union[None, int, str, bool, List["JsonType"], Dict["JsonType", "JsonType"]]
@@ -26,6 +26,7 @@ class IProjJson:
     pre_usr_libl: List[str]
     post_usr_libl: List[str]
     set_ibm_i_env_cmd: List[str]
+    iasp: str
     tgt_ccsid: str
     extensions: Optional[Dict[str, "JsonType"]]
 
@@ -39,6 +40,7 @@ class IProjJson:
                  pre_usr_libl: List[str] = None,
                  post_usr_libl: List[str] = None,
                  set_ibm_i_env_cmd: List[str] = None,
+                 iasp: str = DEFAULT_IASP,
                  tgt_ccsid: str = "*JOB",
                  extensions: Optional[Dict[str, JsonType]] = None):
         # pylint: disable=too-many-arguments
@@ -53,8 +55,11 @@ class IProjJson:
         self.pre_usr_libl = pre_usr_libl if pre_usr_libl else []
         self.post_usr_libl = post_usr_libl if post_usr_libl else []
         self.set_ibm_i_env_cmd = set_ibm_i_env_cmd if set_ibm_i_env_cmd else []
+        self.iasp = iasp if iasp else ""
         self.tgt_ccsid = tgt_ccsid
         self.extensions = extensions if extensions else {}
+        # Validate that if iasp is provided, setIBMiEnvCmd contains SETASPGRP
+        self._validate_iasp_config()
 
     @classmethod
     def from_file(cls, file_path: Path) -> "IProjJson":
@@ -85,6 +90,7 @@ class IProjJson:
 
                 tgt_ccsid = with_default_value("tgtCcsid", "*JOB", iproj_json)
                 set_ibm_i_env_cmd = list(map(parse_all_variables, with_default_value("setIBMiEnvCmd", [], iproj_json)))
+                iasp = parse_all_variables(with_default_value("iasp", DEFAULT_IASP, iproj_json))
                 extensions = with_default_value("extensions", {}, iproj_json)
                 return IProjJson(
                     description=with_default_value("description", "", iproj_json),
@@ -97,11 +103,27 @@ class IProjJson:
                     pre_usr_libl=pre_usr_libl,
                     post_usr_libl=post_usr_libl,
                     set_ibm_i_env_cmd=set_ibm_i_env_cmd,
+                    iasp=iasp,
                     tgt_ccsid=tgt_ccsid,
                     extensions=extensions
                 )
         except FileNotFoundError:
             print(colored("iproj.json not found!", Colors.FAIL))
+            sys.exit(1)
+
+    def _validate_iasp_config(self) -> None:
+        """Validates that iasp and setIBMiEnvCmd with SETASPGRP are both set or both empty"""
+        # Check if any command in set_ibm_i_env_cmd contains SETASPGRP
+        has_setaspgrp = any(
+            "SETASPGRP" in cmd.upper()
+            for cmd in self.set_ibm_i_env_cmd
+        )
+        # Both iasp and SETASPGRP must be set together, or both must be empty
+        iasp_is_set = bool(self.iasp)
+        if iasp_is_set != has_setaspgrp:
+            error_msg = (
+                "Both IASP name and SETASPGRP cmd should be configured in iproj.json")
+            print(colored(error_msg, Colors.FAIL))
             sys.exit(1)
 
     def __dict__(self):
@@ -116,6 +138,7 @@ class IProjJson:
             "preUsrLibl": self.pre_usr_libl,
             "postUsrLibl": self.post_usr_libl,
             "setIBMiEnvCmd": self.set_ibm_i_env_cmd,
+            "iasp": self.iasp,
             "tgtCcsid": self.tgt_ccsid,
             "extensions": self.extensions
         }

@@ -121,6 +121,18 @@ makei cvtsrcpf [-h] [-c <ccsid>] [-l] [-t] <file> <library>
 
 Converts all members in a source physical file to properly-named (TOBi-compatible), UTF-8 encoded, LF-terminated source files in the current directory in the IFS. Generally speaking, the source member type will become the filename extension.
 
+> [!IMPORTANT]
+> **IASP Prerequisite:**
+>
+> If you are converting source files from a library in an IASP, you **must** first set the ASP group in your terminal session before running `makei cvtsrcpf`:
+>
+> ```bash
+> cl "SETASPGRP ASPGRP(IASP1)"
+> makei cvtsrcpf -c 37 -t -l QRPGLESRC IASPT1
+> ```
+>
+> Replace `IASP1` with your actual IASP name. Without setting the ASP group first, the command will not be able to access libraries in the IASP.
+
 For example, RPGLE source member `AB1001` will become IFS source file `AB1001.RPGLE`. Four exceptions exist, however: source member types CMD, MENU, and PNLGRP result in filename extensions .CMDSRC, .MENUSRC, and .PNLGRPSRC, respectively, and source member type C residing in source physical file H results in filename extension .H.
 
 All source files will be encoded in UTF-8. If the source physical file was created successfully, a `.ibmi.json` file with the CCSID value from the SRC-PF will be created in the same directory. Note that it will not override an existing `.ibmi.json` file. [Link to discussions](https://github.com/IBM/ibmi-tobi/pull/115#issuecomment-1194661949)

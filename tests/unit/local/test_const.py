@@ -3,6 +3,7 @@ from makei.const import (
     DEFAULT_TGT_CCSID,
     DEFAULT_OBJLIB,
     DEFAULT_CURLIB,
+    DEFAULT_IASP,
     TOBI_PATH,
     MK_PATH,
     METADATA_HEADER,
@@ -27,6 +28,7 @@ def test_default_constants():
     assert DEFAULT_TGT_CCSID == "*JOB"
     assert DEFAULT_OBJLIB == "*CURLIB"
     assert DEFAULT_CURLIB == "*CRTDFT"
+    assert DEFAULT_IASP == ""
 
 
 def test_path_constants():

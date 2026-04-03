@@ -30,6 +30,16 @@ tmppipe=$(mktemp)
 exitCode=0
 echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
+IFS=$'\\n'
+echo "$IBMiEnvCmd"
+if [ ! -z "$IBMiEnvCmd" ]; then
+  for envcmd in $IBMiEnvCmd; do
+    [[ ! -z "$envcmd" ]] && cl "$envcmd"
+  done
+fi
+
+unset IFS
+
 [[ ! -z "$curlib" ]] && liblist -c "$curlib"
 
 # Adding preUsrlibl to liblist in reverse to preserve correct order
@@ -47,14 +57,6 @@ if [ ! -z "$tmpCurlib" ]; then
   echo ">> Temporarily set curlib to $tmpCurlib"
   (liblist -d "$curlib" && liblist -af "$curlib") || true
   liblist -c "$tmpCurlib"
-fi
-
-IFS=$'\\n'
-echo "$IBMiEnvCmd"
-if [ ! -z "$IBMiEnvCmd" ]; then
-  for envcmd in $IBMiEnvCmd; do
-    [[ ! -z "$envcmd" ]] && cl "$envcmd"
-  done
 fi
 
 cl "CHGJOB LOG(4 00 *SECLVL)"

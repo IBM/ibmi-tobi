@@ -55,7 +55,7 @@ jobs:
         id: find_rpm
         run: |
           $scp_dist_command
-          echo "RPM_FILE_PATH=$(find . -name '*.rpm' -print -quit)" >> $GITHUB_OUTPUT
+          echo "RPM_FILE_PATH=$(find . -name 'tobi-*.rpm' -print -quit)" >> $GITHUB_OUTPUT
       - name: Cleanup remote build dir
         if: always()
         run: $ssh_command "rm -fr $remote_build_dir"

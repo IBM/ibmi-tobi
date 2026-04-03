@@ -10,8 +10,9 @@ from makei import __version__
 from makei import init_project
 from makei.build import BuildEnv
 from makei.cvtsrcpf import CvtSrcPf
-from makei.utils import Colors, colored, decompose_filename, escape_special_chars
+from makei.utils import Colors, colored, escape_special_chars
 from pathlib import Path
+from makei.iproj_json import IProjJson
 
 
 def cli():
@@ -221,16 +222,21 @@ def handle_info(args):
     print("Not implemented!")
 
 
-def read_and_filter_rules_mk(source_names):
-    """
-    Read the Rules.mk file and return targets that match allowed extensions.
-    """
+def extract_subdirs_from_rules_mk(rules_mk_path):
+    """Extract SUBDIRS list from a Rules.mk file."""
+    with rules_mk_path.open("r") as f:
+        for line in f:
+            line_stripped = line.strip()
+            if line_stripped.startswith('SUBDIRS'):
+                # Extract subdirs: "SUBDIRS = dir1 dir2" or "SUBDIRS := dir1 dir2"
+                subdir_list = line_stripped.split('=', 1)[1].strip().split()
+                return subdir_list
+    return []
+
+
+def parse_rules_mk_for_targets(rules_mk_path, filename_upper, show_location=False, first_only=False):
+    """Parse Rules.mk file and return targets matching the given filename."""
     build_targets = []
-    source_path = Path(source_names[0])
-    name, _, ext, _ = decompose_filename(source_names[0])
-    rules_mk_path = Path(source_names[0]).parent / "Rules.mk"
-    if not rules_mk_path.exists():
-        raise FileNotFoundError(f"No Rules.mk found at {rules_mk_path}")
     with rules_mk_path.open("r") as f:
         for raw_line in f:
             line = raw_line.strip()
@@ -238,9 +244,67 @@ def read_and_filter_rules_mk(source_names):
                 continue  # skip blank lines, comments, or malformed lines
             target, deps = map(str.strip, line.split(":", 1))
             dep_list = [dep.upper().replace(r'\#', '#') for dep in deps.split()]
-            if source_path.name.upper() in dep_list:
+            if filename_upper in dep_list:
                 escaped_target = escape_special_chars(target)
                 build_targets.append(escaped_target)
+                if show_location:
+                    print(colored(f"Found target '{target}' in {rules_mk_path}", Colors.OKGREEN))
+                if first_only:
+                    break  # Stop after finding the first matching target
+    return build_targets
+
+
+def search_depth_first(current_dir, filename_upper):
+    """
+    Recursively search for targets following SUBDIRS order (depth-first).
+    Fully explores each subdirectory before moving to the next sibling.
+    """
+    current_rules_mk = current_dir / "Rules.mk"
+    if not current_rules_mk.exists():
+        return []
+
+    # Check current Rules.mk for targets matching the filename
+    targets = parse_rules_mk_for_targets(
+        current_rules_mk,
+        filename_upper,
+        show_location=True,
+        first_only=True
+    )
+    if targets:
+        return targets  # Return immediately upon finding first match
+
+    # No match in current directory, search subdirectories depth-first
+    subdir_list = extract_subdirs_from_rules_mk(current_rules_mk)
+    for subdir in subdir_list:
+        subdir_path = current_dir / subdir
+        if subdir_path.is_dir():
+            targets = search_depth_first(subdir_path, filename_upper)
+            if targets:
+                return targets  # Return immediately upon finding match in subdir
+    return []
+
+
+def read_and_filter_rules_mk(source_names):
+    """
+    Read the Rules.mk file and return targets that match allowed extensions.
+    If the source file is just a filename (no path), search recursively through
+    all subdirectories following SUBDIRS order defined in Rules.mk files.
+    Stops at the first Rules.mk file that contains a matching target.
+    """
+    source_path = Path(source_names[0])
+    filename_upper = source_path.name.upper()
+    build_targets = []
+
+    # Check if source_path is just a filename (no directory component)
+    if source_path.parent == Path('.'):
+        build_targets = search_depth_first(Path.cwd(), filename_upper)
+    else:
+        rules_mk_path = source_path.parent / "Rules.mk"
+        if not rules_mk_path.exists():
+            raise FileNotFoundError(f"No Rules.mk found at {rules_mk_path}")
+        build_targets = parse_rules_mk_for_targets(rules_mk_path, filename_upper, show_location=False, first_only=False)
+
+    # Single error message for both cases
     if not build_targets:
         raise ValueError(f"No target found in Rules.mk for source file '{source_path.name}'")
     return build_targets
@@ -260,13 +324,12 @@ def handle_compile(args):
     else:
         filenames = []
     targets = []
-    source_names = []
     for name in filenames:
         if os.path.isdir(name):
             targets.append(make_dir_target(name))
         else:
-            source_names.append(name)
-            targets_from_rule = read_and_filter_rules_mk(source_names)
+            # Pass each file individually to read_and_filter_rules_mk
+            targets_from_rule = read_and_filter_rules_mk([name])
             targets.extend([t.upper() for t in targets_from_rule])
     targets1 = ([t.upper().replace('HASHESCAPE_', '#').replace('DOLLARESCAPE_', '$') for t in targets])
     print(colored("targets: " + ', '.join(targets1), Colors.OKBLUE))
@@ -316,7 +379,12 @@ def handle_cvtsrcpf(args):
     """
     if args.log:
         print(colored("Warning: --trace has no effect on 'cvtsrcpf' command.", Colors.WARNING))
-    CvtSrcPf(args.file, args.library, args.tolower, args.ccsid, args.text).run()
+    iasp = ""
+    iproj_path = Path.cwd() / "iproj.json"
+    if iproj_path.exists():
+        iproj = IProjJson.from_file(iproj_path)
+        iasp = iproj.iasp
+    CvtSrcPf(args.file, args.library, args.tolower, args.ccsid, args.text, iasp=iasp).run()
 
 
 def get_override_vars(args):

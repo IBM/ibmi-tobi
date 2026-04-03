@@ -22,16 +22,17 @@ class CvtSrcPf:
     tolower: bool
     ibmi_json_path: Optional[Path]
     store_member_text: bool
+    iasp: str
 
     def __init__(
-        self, srcfile: str, lib: str, tolower: bool, default_ccsid: str = None, text: bool = False,
-        save_path: Path = Path.cwd()
-    ) -> None:
+        self, srcfile: str, lib: str, tolower: bool, default_ccsid: str = None,
+            text: bool = False, save_path: Path = Path.cwd(), iasp: str = "") -> None:
         self.job = IBMJob()
 
         self.lib = lib
         self.srcfile = srcfile
         self.save_path = save_path
+        self.iasp = iasp
         if default_ccsid is not None and validate_ccsid(default_ccsid):
             self.default_ccsid = default_ccsid
         else:
@@ -91,7 +92,7 @@ class CvtSrcPf:
         return False
 
     def run(self) -> int:
-        srcpath = Path(objlib_to_path(self.lib, f"{self.srcfile}.FILE"))
+        srcpath = Path(objlib_to_path(self.lib, f"{self.srcfile}.FILE", self.iasp))
         if not srcpath.exists():
             raise Exception(f"Source file '{srcpath}' does not exist")
         src_mbrs = self._get_src_mbrs()
