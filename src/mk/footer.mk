@@ -17,7 +17,7 @@ endef
 
 ifdef TARGETS
 TARGETS_$(d) := $(TARGETS)
-$(foreach tgt,$(TARGETS),$(eval vpath $(tgt) $(OBJPATH_$(d)))$(eval $(tgt)_d = $(d)))
+$(foreach tgt,$(TARGETS),$(eval vpath $(tgt) $(OBJPATH_$(d)))$(eval $(tgt)_d = $(d))$(eval $(call generate_rule,$(tgt),$(call escape_source,$($(tgt)_SRC)),$(call escape_specials,$($(tgt)_DEP)),$($(tgt)_RECIPE))))
 endif
 
 
@@ -30,21 +30,8 @@ $(foreach sd,$(SUBDIRS),$(eval $(call include_subdir_rules,$(sd))))
 .PHONY: dir_$(d) clean_$(d) clean_extra_$(d) clean_tree_$(d) dist_clean_$(d)
 .SECONDARY: $(OBJPATH)
 
-# Check which IBM i objects exist in OBJLIB
-OBJLIB_$(d) := $(OBJPATH_$(d))
-LIB_PATHS_$(d) := $(foreach tgt,$(TARGETS_$(d)),$(OBJLIB_$(d))/$(subst DOLLARESCAPE_,$,$(subst HASHESCAPE_,#,$(tgt))))
-EXISTING_QSYS_$(d) := $(wildcard $(LIB_PATHS_$(d)))
-
-# Filter original target names by checking if their object paths exist in library
-TARGETS_TO_BUILD_$(d) := $(foreach tgt,$(TARGETS_$(d)),$(if $(filter $(OBJLIB_$(d))/$(subst DOLLARESCAPE_,$$,$(subst HASHESCAPE_,#,$(tgt))),$(EXISTING_QSYS_$(d))),,$(tgt)))
-
-# Generate build rules ONLY for targets that need building
-$(foreach tgt,$(TARGETS_TO_BUILD_$(d)),$(eval $(call generate_rule,$(tgt),$(call escape_source,$($(tgt)_SRC)),$(call escape_source,$($(tgt)_DEP)),$($(tgt)_RECIPE))))
-
-# Mark the object paths in library as existing (no recipe needed, Make will check if file exists)
-$(foreach tgt,$(filter-out $(TARGETS_TO_BUILD_$(d)),$(TARGETS_$(d))),$(eval $(tgt): ;))
-
-all :: $(TARGETS_TO_BUILD_$(d))
+# Whole tree targets
+all :: $(TARGETS_$(d))
 
 clean_all :: clean_$(d)
 

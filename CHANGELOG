@@ -1,3 +1,4 @@
+- Added support to source and target objects with # and $ symbol
 * Thu Mar 12 2026 Het Patel <het.patel@ibm.com> - 3.2.1
 - Added a new feature for IASP support.
 - Fixed Label on Table issue.

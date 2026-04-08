@@ -221,7 +221,7 @@ class RulesMk:
             include_dirs = []
         with rules_mk_path.open("r") as f:
             rules_mk_str = f.read()
-        rules_mk = RulesMk.from_str(rules_mk_str, rules_mk_path.parent, src_dir, include_dirs)
+        rules_mk = RulesMk.from_str(rules_mk_str, rules_mk_path.parent, Path(src_dir), include_dirs)
         return rules_mk
 
     @classmethod
