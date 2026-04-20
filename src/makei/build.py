@@ -85,10 +85,8 @@ class BuildEnv:
 
     def __del__(self):
         if not self._trace:
-            try:
                 self.build_vars_path.unlink()
-            except FileNotFoundError:
-                pass  # File already deleted, ignore
+
 
     def dump_resolved_makefile(self):
         """Generate a fully resolved Makefile dump without building."""
