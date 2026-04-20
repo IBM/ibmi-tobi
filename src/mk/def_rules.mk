@@ -187,6 +187,9 @@ endif
 ifndef RCDLEN
 RCDLEN :=
 endif
+ifndef MBR
+MBR :=
+endif
 ifndef REUSEDLT
 REUSEDLT := *NO
 endif
@@ -326,6 +329,7 @@ DSPF_OPTION := *EVENTF *SRC *LIST
 DSPF_RSTDSP := *YES
 
 LF_AUT := $(AUT)
+LF_MBR := $(MBR)
 LF_OPTION := *EVENTF *SRC *LIST
 
 MNU_AUT := $(AUT)
@@ -339,6 +343,7 @@ PNLGRP_OPTION := *EVENTF *SRC
 
 PF_AUT := $(AUT)
 PF_DLTPCT := $(DLTPCT)
+PF_MBR := $(MBR)
 PF_OPTION := *EVENTF *SRC *LIST
 PF_REUSEDLT := $(REUSEDLT)
 PF_SIZE :=
@@ -465,9 +470,9 @@ CRTCPPMODFLAGS = TERASPACE($(TERASPACE)) STGMDL($(STGMDL)) OUTPUT(*PRINT) OPTION
                  SYSIFCOPT($(SYSIFCOPT)) AUT($(AUT)) TEXT('$(subst ','',$(TEXT))') TGTCCSID($(TGTCCSID)) TGTRLS($(TGTRLS)) INLINE($(INLINE)) INCDIR($(INCDIR)) \
                  LOCALETYPE($(LOCALETYPE)) DEFINE($(DEFINE)) USRPRF($(USRPRF))
 CRTDSPFFLAGS = ENHDSP($(ENHDSP)) RSTDSP($(RSTDSP)) DFRWRT($(DFRWRT)) AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))')
-CRTLFFLAGS = AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))')
+CRTLFFLAGS = AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') $(if $(MBR),MBR($(MBR)),)
 CRTMNUFLAGS = AUT($(AUT)) OPTION($(OPTION)) CURLIB($(CURLIB)) PRDLIB($(PRDLIB)) TEXT('$(subst ','',$(TEXT))') TYPE($(TYPE))
-CRTPFFLAGS = AUT($(AUT)) DLTPCT($(DLTPCT)) OPTION($(OPTION)) REUSEDLT($(REUSEDLT)) SIZE($(SIZE)) ALWUPD($(PF_ALWUPD)) TEXT('$(subst ','',$(TEXT))')
+CRTPFFLAGS = AUT($(AUT)) DLTPCT($(DLTPCT)) OPTION($(OPTION)) REUSEDLT($(REUSEDLT)) SIZE($(SIZE)) ALWUPD($(PF_ALWUPD)) TEXT('$(subst ','',$(TEXT))') $(if $(MBR),MBR($(MBR)),)
 CRTPGMFLAGS = ACTGRP($(ACTGRP)) ALWUPD($(ALWUPD)) USRPRF($(USRPRF)) TGTRLS($(TGTRLS)) AUT($(AUT)) DETAIL($(DETAIL)) OPTION($(CRTPGM_OPTION)) STGMDL($(STGMDL)) TEXT('$(subst ','',$(TEXT))') ALWRINZ($(ALWRINZ))
 CRTPNLGRPFLAGS = AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))')
 CRTRPGPGMFLAGS = OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') USRPRF($(USRPRF)) TGTRLS($(TGTRLS))
@@ -695,6 +700,12 @@ fileALWUPD = $(strip \
 	$(if $(filter %.PF,$<),$(PF_ALWUPD), \
 	$(if $(filter %.pf,$<),$(PF_ALWUPD), \
 	UNKNOWN_FILE_TYPE)))
+fileMBR = $(strip \
+	$(if $(filter %.PF,$<),$(PF_MBR), \
+	$(if $(filter %.pf,$<),$(PF_MBR), \
+	$(if $(filter %.LF,$<),$(LF_MBR), \
+	$(if $(filter %.lf,$<),$(LF_MBR), \
+	UNKNOWN_FILE_TYPE)))))
 fileTGTRLS = $(strip \
 	$(if $(filter %.table,$<),$(SQL_TGTRLS), \
 	$(if $(filter %.TABLE,$<),$(SQL_TGTRLS), \
@@ -1187,7 +1198,8 @@ define FILE_VARIABLES =
 	$(eval SIZE = $(fileSIZE))\
 	$(eval TGTRLS = $(fileTGTRLS))\
 	$(eval ALWUPD = $(fileALWUPD))\
-	$(eval TYPEDEF = $(if $(filter YES,$(CREATE_TYPEDEF)),$(SCRIPTSPATH)/crttypedef "$<" "$@" "$(OBJPATH)",))
+	$(eval TYPEDEF = $(if $(filter YES,$(CREATE_TYPEDEF)),$(SCRIPTSPATH)/crttypedef "$<" "$@" "$(OBJPATH)",))\
+	$(eval MBR = $(fileMBR))
 endef
 
 define DSPF_TO_FILE_RECIPE =
