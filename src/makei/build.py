@@ -85,8 +85,7 @@ class BuildEnv:
 
     def __del__(self):
         if not self._trace:
-                self.build_vars_path.unlink()
-
+            self.build_vars_path.unlink()
 
     def dump_resolved_makefile(self):
         """Generate a fully resolved Makefile dump without building."""
