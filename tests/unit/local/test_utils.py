@@ -1,4 +1,4 @@
-from makei.utils import make_include_dirs_absolute,decompose_filename
+from makei.utils import make_include_dirs_absolute, decompose_filename, get_target_patterns_for_makefile
 import json
 import pytest
 from pathlib import Path
@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 from makei.iproj_json import IProjJson
 from makei.ibmi_json import IBMiJson
 from makei.utils import objlib_to_path
+from makei.const import TARGET_TARGETGROUPS_MAPPING
 
 # flake8: noqa: E501
 
@@ -382,3 +383,14 @@ def test_objlib_to_path_iasp_with_numeric_names():
     assert path == f"/{iasp}/QSYS.LIB/{lib}.LIB/{obj}"
     assert "001" in path  # Verify numbers are preserved
 
+def test_get_target_patterns_for_makefile_integration_with_build():
+    """Test that get_target_patterns_for_makefile integrates correctly with build process"""
+    result = get_target_patterns_for_makefile()
+    
+    # Check all patterns exist
+    for target_type in TARGET_TARGETGROUPS_MAPPING.keys():
+        assert f'%.{target_type}' in result
+    
+    # Check sorting
+    patterns = result.split()
+    assert patterns == sorted(patterns), "Target patterns should be in sorted order"
