@@ -47,7 +47,7 @@ class BuildEnv:
                  overrides: Dict[str, Any] = None, trace=False):
         overrides = overrides or {}
         self.src_dir = Path.cwd()
-        self.targets = targets if targets is not None else ["all"]
+        self.targets = [self._escape_special_chars_internal(t) for t in (targets or ["all"])]
         self.make_options = make_options if make_options else ""
         self.tobi_path = Path(
             overrides["tobi_path"]) if "tobi_path" in overrides else TOBI_PATH
@@ -119,7 +119,7 @@ class BuildEnv:
             if 'HASHESCAPE_' in t or 'DOLLARESCAPE_' in t:
                 escaped_targets.append(t)
             else:
-                escaped = t.replace('#', 'HASHESCAPE_').replace('$', 'DOLLARESCAPE_')
+                escaped = self._escape_special_chars_internal(t)
                 escaped_targets.append(escaped)
         # For display: show 'all' if many targets, otherwise show actual targets
         if len(escaped_targets) > 2:
@@ -388,12 +388,11 @@ OBJECT_TARGET_PATTERNS := {target_patterns}
 
 """)
             for subdir in subdirs:
-                # Replace spaces with __SPACE__ for Make variable names
-                escaped_path = str(subdir.absolute()).replace(' ', '__SPACE__')
+                # print(dir_var_map[subdir].build)
                 file.write(
-                    f"TGTCCSID_{escaped_path} := {dir_var_map[subdir].build['tgt_ccsid']}\n")
+                    f"TGTCCSID_{subdir.absolute()} := {dir_var_map[subdir].build['tgt_ccsid']}\n")
                 file.write(
-                    f"OBJPATH_{escaped_path} := "
+                    f"OBJPATH_{subdir.absolute()} := "
                     f"{objlib_to_path(dir_var_map[subdir].build['objlib'], iasp=self.iasp)}\n")
 
             # for rules_mk in rules_mks:
@@ -425,7 +424,7 @@ OBJECT_TARGET_PATTERNS := {target_patterns}
             if "was created successfully!" in line:
                 self.success_targets.append(line.split()[1])
             # Replace escaped special characters back to original symbols for display
-            display_line = line.replace('DOLLARESCAPE_', '$').replace('HASHESCAPE_', '#')
+            display_line = self._unescape_special_chars(line)
             print_to_stdout(display_line)
 
         # Generate command (returns tuple: display_cmd, actual_cmd)

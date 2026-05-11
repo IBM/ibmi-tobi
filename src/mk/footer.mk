@@ -11,13 +11,14 @@ $(subst DOLLARESCAPE_,$$$$$$$,$(subst HASHESCAPE_,\#,$(1)))
 endef
 
 # Escape specials for source and dependency, but preserve HASHESCAPE_ and DOLLARESCAPE_ for object dependencies in OBJECT_TARGET_PATTERNS
+# Object dependencies should keep their escaped form (HASHESCAPE_, DOLLARESCAPE_) to match target names
 define escape_source
-$(if $(filter $(OBJECT_TARGET_PATTERNS),$(1)),$(1),$(call escape_specials,$(1)))
+$(if $(filter %.CMD %.FILE %.MENU %.MODULE %.PGM %.PNLGRP %.QMQRY %.SRVPGM %.TRG %.WSCST,$(1)),$(1),$(call escape_specials,$(1)))
 endef
 
 ifdef TARGETS
 TARGETS_$(d) := $(TARGETS)
-$(foreach tgt,$(TARGETS),$(eval vpath $(tgt) $(OBJPATH_$(d)))$(eval $(tgt)_d = $(d))$(eval $(call generate_rule,$(tgt),$(call escape_source,$($(tgt)_SRC)),$(call escape_specials,$($(tgt)_DEP)),$($(tgt)_RECIPE))))
+$(foreach tgt,$(TARGETS),$(eval vpath $(tgt) $(OBJPATH_$(d)))$(eval $(tgt)_d = $(d))$(eval $(call generate_rule,$(tgt),$(call escape_source,$($(tgt)_SRC)),$(foreach dep,$($(tgt)_DEP),$(call escape_source,$(dep))),$($(tgt)_RECIPE))))
 endif
 
 

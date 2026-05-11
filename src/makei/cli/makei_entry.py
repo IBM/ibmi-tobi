@@ -331,7 +331,7 @@ def handle_compile(args):
             # Pass each file individually to read_and_filter_rules_mk
             targets_from_rule = read_and_filter_rules_mk([name])
             targets.extend([t.upper() for t in targets_from_rule])
-    targets1 = ([t.upper().replace('HASHESCAPE_', '#').replace('DOLLARESCAPE_', '$') for t in targets])
+    targets1 = ([BuildEnv._unescape_special_chars(t.upper()) for t in targets])
     print(colored("targets: " + ', '.join(targets1), Colors.OKBLUE))
     build_env = BuildEnv(targets, args.make_options, get_override_vars(args), trace=args.log)
     if args.log:

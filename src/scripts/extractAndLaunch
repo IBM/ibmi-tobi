@@ -3,8 +3,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 joblog_json=$1
 pseudoSrcFile=$2
+#Escapes \# back to #
+pseudoSrcFile="${pseudoSrcFile//\\#/#}"
+#Escapes DOLLARESCAPE_ back to $
+pseudoSrcFile="${pseudoSrcFile//DOLLARESCAPE_/$}"
 objlib=$3
 objname=$4
+#Escapes DOLLARESCAPE_ back to $ in objname
+objname="${objname//DOLLARESCAPE_/$}"
 precmd=$5
 postcmd=$6
 object=$7
@@ -39,4 +45,4 @@ while read -r line; do
     suppressError=""
     cmd=""
   fi
-done < <(grep "" $pseudoSrcFile)
+done < <(grep "" "$pseudoSrcFile")

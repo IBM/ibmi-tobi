@@ -42,11 +42,11 @@ class MKRule:
 
         if len(self.commands) == 0:
             for dependency in self.dependencies:
-                dependency1 = dependency.replace(r'\#', '#')
-                if is_source_file(dependency1) and decompose_filename(dependency1)[-1] == "":
-                    if (self.containing_dir / dependency1).exists():
+                dependency_esc = dependency.replace(r'\#', '#')
+                if is_source_file(dependency_esc) and decompose_filename(dependency_esc)[-1] == "":
+                    if (self.containing_dir / dependency_esc).exists():
                         self.is_source_file = True
-                        self.source_file = '$(d)/' + dependency1
+                        self.source_file = '$(d)/' + dependency_esc
                         self.dependencies.remove(dependency)
                         return
             try:

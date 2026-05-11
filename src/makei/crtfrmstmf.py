@@ -219,8 +219,6 @@ class CrtFrmStmf():
 
         for lib, obj_tuples in obj_list_by_lib.items():
             obj_name_list, obj_type_list = list(zip(*obj_tuples))
-            # Delete the temp source file
-            self.setup_job.run_cl(f'DLTF FILE({self.tmp_lib}/{lib})', True)
             self.setup_job.run_cl(f"CRTSAVF FILE({self.tmp_lib}/{lib})")
             self.setup_job.run_cl(
                 f"SAVOBJ OBJ({' '.join(set(obj_name_list))}) LIB({self.lib}) DEV(*SAVF)"
