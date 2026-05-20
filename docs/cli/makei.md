@@ -110,6 +110,16 @@ makei build [-h] [-t <target> | -d <subdir>] [-o <options>] [--tobi-path <path>]
 
   ---
 
+### Custom makefile support
+
+TOBi supports using a custom makefile through the `TOBI_CUSTOM_MAKEFILE` environment variable.
+
+Example:
+
+```bash
+export TOBI_CUSTOM_MAKEFILE=<path_to_custom_makefile>
+makei b -t <custom_target>
+```
 ### cvtsrcpf
 
 ?> convert source physical file members to ASCII IFS files

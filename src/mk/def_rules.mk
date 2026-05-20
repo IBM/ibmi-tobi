@@ -45,6 +45,7 @@ endif
 
 empty :=
 space :=$(empty) $(empty)
+comma := ,
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 
@@ -186,6 +187,9 @@ PRDLIB :=
 endif
 ifndef RCDLEN
 RCDLEN :=
+endif
+ifndef MBR
+MBR :=
 endif
 ifndef REUSEDLT
 REUSEDLT := *NO
@@ -363,6 +367,10 @@ CL_OPTION := *SRCDBG
 CL_TGTRLS := $(TGTRLS)
 CL_USRPRF := $(USRPRF)
 
+SQLRPG_OPTION := *NOSRC
+SQLRPG_TGTRLS := $(TGTRLS)
+SQLRPG_USRPRF := $(USRPRF)
+
 PRTF_AUT := $(AUT)
 PRTF_OPTION := *EVENTF *SRC *LIST
 PRTF_PAGESIZE := 66 132
@@ -465,12 +473,13 @@ CRTCPPMODFLAGS = TERASPACE($(TERASPACE)) STGMDL($(STGMDL)) OUTPUT(*PRINT) OPTION
                  SYSIFCOPT($(SYSIFCOPT)) AUT($(AUT)) TEXT('$(subst ','',$(TEXT))') TGTCCSID($(TGTCCSID)) TGTRLS($(TGTRLS)) INLINE($(INLINE)) INCDIR($(INCDIR)) \
                  LOCALETYPE($(LOCALETYPE)) DEFINE($(DEFINE)) USRPRF($(USRPRF))
 CRTDSPFFLAGS = ENHDSP($(ENHDSP)) RSTDSP($(RSTDSP)) DFRWRT($(DFRWRT)) AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))')
-CRTLFFLAGS = AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))')
+CRTLFFLAGS = AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') $(if $(MBR),MBR($(MBR)),)
 CRTMNUFLAGS = AUT($(AUT)) OPTION($(OPTION)) CURLIB($(CURLIB)) PRDLIB($(PRDLIB)) TEXT('$(subst ','',$(TEXT))') TYPE($(TYPE))
-CRTPFFLAGS = AUT($(AUT)) DLTPCT($(DLTPCT)) OPTION($(OPTION)) REUSEDLT($(REUSEDLT)) SIZE($(SIZE)) ALWUPD($(PF_ALWUPD)) TEXT('$(subst ','',$(TEXT))')
+CRTPFFLAGS = AUT($(AUT)) DLTPCT($(DLTPCT)) OPTION($(OPTION)) REUSEDLT($(REUSEDLT)) SIZE($(SIZE)) ALWUPD($(PF_ALWUPD)) TEXT('$(subst ','',$(TEXT))') $(if $(MBR),MBR($(MBR)),)
 CRTPGMFLAGS = ACTGRP($(ACTGRP)) ALWUPD($(ALWUPD)) USRPRF($(USRPRF)) TGTRLS($(TGTRLS)) AUT($(AUT)) DETAIL($(DETAIL)) OPTION($(CRTPGM_OPTION)) STGMDL($(STGMDL)) TEXT('$(subst ','',$(TEXT))') ALWRINZ($(ALWRINZ))
 CRTPNLGRPFLAGS = AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))')
 CRTRPGPGMFLAGS = OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') USRPRF($(USRPRF)) TGTRLS($(TGTRLS))
+CRTSQLRPGFLAGS = OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') USRPRF($(USRPRF)) TGTRLS($(TGTRLS))
 CRTCBLPGMFLAGS = OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') USRPRF($(USRPRF))  TGTRLS($(TGTRLS))
 CRTPRTFFLAGS = AUT($(AUT)) OPTION($(OPTION)) PAGESIZE($(PAGESIZE)) TEXT('$(subst ','',$(TEXT))')
 CRTRPGMODFLAGS = AUT($(AUT)) DBGVIEW($(DBGVIEW)) DBGENCKEY($(DBGENCKEY)) OPTIMIZE($(OPTIMIZE)) OPTION($(OPTION)) OUTPUT(*PRINT) TEXT('$(subst ','',$(TEXT))') \
@@ -699,6 +708,12 @@ fileALWUPD = $(strip \
 	$(if $(filter %.PF,$<),$(PF_ALWUPD), \
 	$(if $(filter %.pf,$<),$(PF_ALWUPD), \
 	UNKNOWN_FILE_TYPE)))
+fileMBR = $(strip \
+	$(if $(filter %.PF,$<),$(PF_MBR), \
+	$(if $(filter %.pf,$<),$(PF_MBR), \
+	$(if $(filter %.LF,$<),$(LF_MBR), \
+	$(if $(filter %.lf,$<),$(LF_MBR), \
+	UNKNOWN_FILE_TYPE)))))
 fileTGTRLS = $(strip \
 	$(if $(filter %.table,$<),$(SQL_TGTRLS), \
 	$(if $(filter %.TABLE,$<),$(SQL_TGTRLS), \
@@ -1010,9 +1025,13 @@ programUSRPRF = $(strip \
 	$(if $(filter %.module,$<),$(PGM_USRPRF), \
 	$(if $(filter %.RPG,$<),$(PGM_USRPRF), \
 	$(if $(filter %.rpg,$<),$(PGM_USRPRF), \
+	$(if $(filter %.CBL,$<),$(PGM_USRPRF), \
+	$(if $(filter %.cbl,$<),$(PGM_USRPRF), \
+	$(if $(filter %.SQLRPG,$<),$(SQLRPG_USRPRF), \
+	$(if $(filter %.sqlrpg,$<),$(SQLRPG_USRPRF), \
 	$(if $(filter %.CLP,$<),$(CL_USRPRF), \
 	$(if $(filter %.clp,$<),$(CL_USRPRF), \
-	UNKNOWN_FILE_TYPE)))))))))))))))))))))
+	UNKNOWN_FILE_TYPE)))))))))))))))))))))))))
 programDETAIL = $(strip \
 	$(if $(filter %.MODULE,$<),$(PGM_DETAIL), \
 	$(if $(filter %.module,$<),$(PGM_DETAIL), \
@@ -1054,9 +1073,11 @@ programOPTION = $(strip \
 	$(if $(filter %.cbl,$<),$(CBL_OPTION), \
 	$(if $(filter %.RPG,$<),$(RPG_OPTION), \
 	$(if $(filter %.rpg,$<),$(RPG_OPTION), \
+	$(if $(filter %.SQLRPG,$<),$(SQLRPG_OPTION), \
+	$(if $(filter %.sqlrpg,$<),$(SQLRPG_OPTION), \
 	$(if $(filter %.CLP,$<),$(CL_OPTION), \
 	$(if $(filter %.clp,$<),$(CL_OPTION), \
-	UNKNOWN_FILE_TYPE)))))))))))))))))))))))
+	UNKNOWN_FILE_TYPE)))))))))))))))))))))))))
 programRPGPPOPT = $(strip \
 	$(if $(filter %.SQLRPGLE,$<),$(SQLRPGIPGM_RPGPPOPT), \
 	$(if $(filter %.sqlrpgle,$<),$(SQLRPGIPGM_RPGPPOPT), \
@@ -1090,9 +1111,11 @@ programTGTRLS = $(strip \
 	$(if $(filter %.cbl,$<),$(CBL_TGTRLS), \
 	$(if $(filter %.RPG,$<),$(RPG_TGTRLS), \
 	$(if $(filter %.rpg,$<),$(RPG_TGTRLS), \
+	$(if $(filter %.SQLRPG,$<),$(SQLRPG_TGTRLS), \
+	$(if $(filter %.sqlrpg,$<),$(SQLRPG_TGTRLS), \
 	$(if $(filter %.CLP,$<),$(CL_TGTRLS), \
 	$(if $(filter %.clp,$<),$(CL_TGTRLS), \
-	UNKNOWN_FILE_TYPE)))))))))))))))))))))))))))
+	UNKNOWN_FILE_TYPE)))))))))))))))))))))))))))))
 programINCDIR = $(strip \
 	$(if $(filter %.C,$<),$(BNDC_INCDIR), \
 	$(if $(filter %.c,$<),$(BNDC_INCDIR), \
@@ -1191,6 +1214,7 @@ define FILE_VARIABLES =
 	$(eval SIZE = $(fileSIZE))\
 	$(eval TGTRLS = $(fileTGTRLS))\
 	$(eval ALWUPD = $(fileALWUPD))\
+	$(eval MBR = $(fileMBR))\
 	$(eval TYPEDEF = $(if $(filter YES,$(CREATE_TYPEDEF)),$(SCRIPTSPATH)/crttypedef "$<" "$@" "$(OBJPATH)",))
 endef
 
@@ -1551,9 +1575,10 @@ endef
 define CBL_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
 	@$(call echo_cmd,"=== Creating COBOL Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCBLPGM" -p $(CRTCBLPGMFLAGS))
+	$(eval dep_list := $(subst $(space),$(comma),$(filter-out $< $(OBJECT_TARGET_PATTERNS),$^)))
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCBLPGM" -p $(CRTCBLPGMFLAGS) $(if $(dep_list),-d "$(dep_list)"))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCBLPGM" -p "$(CRTCBLPGMFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCBLPGM" -p "$(CRTCBLPGMFLAGS)" -d "$(dep_list)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
@@ -1596,11 +1621,23 @@ endef
 define RPG_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
 	@$(call echo_cmd,"=== Creating RPG Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))']")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTRPGPGM" -p $(CRTRPGPGMFLAGS))
+	$(eval dep_list := $(subst $(space),$(comma),$(filter-out $< $(OBJECT_TARGET_PATTERNS),$^)))
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTRPGPGM" -p $(CRTRPGPGMFLAGS) $(if $(dep_list),-d "$(dep_list)"))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTRPGPGM" -p "$(CRTRPGPGMFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTRPGPGM" -p "$(CRTRPGPGMFLAGS)" -d "$(dep_list)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
+
+define SQLRPG_TO_PGM_RECIPE =
+	$(PGM_VARIABLES)
+	@$(call echo_cmd,"=== Creating SQLRPG Program [$(basename $@)]")
+	$(eval dep_list := $(subst $(space),$(comma),$(filter-out $< $(OBJECT_TARGET_PATTERNS),$^)))
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTSQLRPG" -p $(CRTSQLRPGFLAGS) $(if $(dep_list),-d "$(dep_list)"))
+	@$(PRESETUP) \
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTSQLRPG" -p "$(CRTSQLRPGFLAGS)" -d "$(dep_list)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(if $(filter *NOSRC,$(SQLRPG_OPTION)),,@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent))
+endef
+
 
 define ILEPGM_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)

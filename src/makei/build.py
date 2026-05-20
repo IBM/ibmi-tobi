@@ -383,6 +383,7 @@ doublequotedINCDIR := {incdir.replace("'", "''")}
 IBMiEnvCmd := {self.ibmi_env_cmds}
 iasp := {self.iasp}
 COLOR_TTY := {'true' if self.color else 'false'}
+OBJECT_TARGET_PATTERNS := {target_patterns}
 
 OBJECT_TARGET_PATTERNS := {target_patterns}
 
@@ -423,6 +424,8 @@ OBJECT_TARGET_PATTERNS := {target_patterns}
                 self.failed_targets.append(line.split()[-1].split("!")[0])
             if "was created successfully!" in line:
                 self.success_targets.append(line.split()[1])
+            if "End of creating" in line:
+                self.success_targets.append(line.split()[-1].split("!")[0])
             # Replace escaped special characters back to original symbols for display
             display_line = self._unescape_special_chars(line)
             print_to_stdout(display_line)
@@ -432,7 +435,15 @@ OBJECT_TARGET_PATTERNS := {target_patterns}
         # Print display version, execute actual version
         print(colored(f">> {display_cmd}", Colors.OKGREEN))
         sys.stdout.flush()
-        run_command(actual_cmd, handle_make_output, echo_cmd=False)
+        exit_code = run_command(actual_cmd, handle_make_output, echo_cmd=False)
+
+        custom_makefile = os.environ.get('TOBI_CUSTOM_MAKEFILE')
+        if custom_makefile and not self.success_targets and not self.failed_targets:
+            if self.targets and self.targets[0] != "all":
+                if exit_code == 0:
+                    self.success_targets.append(self.targets[0])
+                else:
+                    self.failed_targets.append(self.targets[0])
         self._post_make()
         return not self.failed_targets
 

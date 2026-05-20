@@ -37,7 +37,7 @@ jobs:
               lib: lib1,
               directory: functionsVAT,
               file: vat300.rpgle,
-              firstBuild: "0 failed 127 succeed 127 total",
+              firstBuild: "0 failed 136 succeed 136 total",
               secondBuild: "0 failed 5 succeed 5 total",
               firstCompile: "0 failed 1 succeed 1 total",
               secondCompile: "0 failed 2 succeed 2 total"
@@ -118,7 +118,7 @@ jobs:
               iasp: GALAXY,
               directory: functionsVAT,
               file: vat300.rpgle,
-              firstBuild: "0 failed 127 succeed 127 total",
+              firstBuild: "0 failed 136 succeed 136 total",
               secondBuild: "0 failed 5 succeed 5 total",
               firstCompile: "0 failed 1 succeed 1 total",
               secondCompile: "0 failed 2 succeed 2 total"

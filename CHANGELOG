@@ -1,4 +1,11 @@
 - Added support to source and target objects with # and $ symbol
+* Fri May 08 2026 Het Patel <het.patel@ibm.com> - 3.3.0
+- Expanded OPM RPG, COBOL, SQLRPG support with dependency/include files tracking.
+- Added SQLRPG recipe for optimized compilation with embedded SQL queries.
+- Added Custom makefile support for specialized build scenarios.
+- Improved support for creating PF and LF objects without members.
+- Changed CL source file default record length (RCDLEN) set to 240.
+- Fixed success counter tracking for custom recipes.
 * Thu Mar 12 2026 Het Patel <het.patel@ibm.com> - 3.2.1
 - Added a new feature for IASP support.
 - Fixed Label on Table issue.

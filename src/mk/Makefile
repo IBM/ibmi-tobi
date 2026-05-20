@@ -73,6 +73,9 @@ $(eval $(value FOOTER))
 # directory.
 -include $(wildcard $(DEPDIR)/*.d)
 
+# Include custom makefile if specified
+-include $(TOBI_CUSTOM_MAKEFILE)
+
 # This is just a convenience - to let you know when make has stopped
 # interpreting make files and started their execution.
 # $(info Rules generated $(if $(BUILD_MODE),for "$(BUILD_MODE)" mode,)...)

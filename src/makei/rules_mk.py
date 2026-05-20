@@ -59,7 +59,7 @@ class MKRule:
                 print(f"No source file found for {self.target} in {self.dependencies}")
         else:
             self.commands.insert(0, f"@$(call echo_cmd,=== Creating [{self.target}] from custom recipe)")
-            self.commands.append(f"@$(call echo_success_cmd,End of creating {self.target})")
+            self.commands.append(f"@$(call echo_success_cmd,End of creating {self.target}!)")
 
     def __str__(self):
         # ESCAPE targets that contain $ and #
