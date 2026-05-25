@@ -191,6 +191,13 @@ def add_cvtsrcpf_parser(subparsers: argparse.ArgumentParser):
         action='store_true'
     )
 
+    cvtsrcpf_parser.add_argument(
+        '-e',
+        '--env',
+        help='override environment variables',
+        metavar='<var>=<value>',
+        action='append'
+    )
     cvtsrcpf_parser.set_defaults(tolower=False)
     cvtsrcpf_parser.set_defaults(handle=handle_cvtsrcpf)
 
