@@ -230,13 +230,13 @@ jobs:
             --cl "CPYFRMSTMF FROMSTMF('/home/BOBBUILD/builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/CCSID5026/test26.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/CCSID5026.FILE/TEST26CPY.MBR') STMFCCSID(5026) MBROPT(*REPLACE)" \
             --cl "CPYFRMSTMF FROMSTMF('/home/BOBBUILD/builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/CCSID5035/test35.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/CCSID5035.FILE/TEST35CPY.MBR') STMFCCSID(5035) MBROPT(*REPLACE)" \
             --cl "CPYFRMSTMF FROMSTMF('/home/BOBBUILD/builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/ALLHEXCODE/allhexcode.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/ALLHEXCODE.FILE/ALLHXCPY.MBR') STMFCCSID(37) MBROPT(*REPLACE)" \
-            --cmd "../ibmi_tobi_cvtsrcpf/bin/makei cvtsrcpf --srcfile ALLHXCPY --lib $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) --output . --tolower | tee cvtsrcpf_allhex.log" \
+            --cmd "../ibmi_tobi_cvtsrcpf/bin/makei cvtsrcpf ALLHEXCODE $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
             --cmd "test -f ./.ibmi.json && echo 'ALLHEXCODE conversion successful' || { echo 'ALLHEXCODE conversion failed'; exit 1; }" \
             --cmd "rm -f ./.ibmi.json allhxcpy.rpgle" \
-            --cmd "../ibmi_tobi_cvtsrcpf/bin/makei cvtsrcpf --srcfile TEST26CPY --lib $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) --output . --tolower | tee cvtsrcpf_5026.log" \
+            --cmd "../ibmi_tobi_cvtsrcpf/bin/makei cvtsrcpf CCSID5026 $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
             --cmd "test -f ./.ibmi.json && echo 'CCSID5026 conversion successful' || { echo 'CCSID5026 conversion failed'; exit 1; }" \
             --cmd "rm -f ./.ibmi.json test26cpy.rpgle" \
-            --cmd "../ibmi_tobi_cvtsrcpf/bin/makei cvtsrcpf --srcfile TEST35CPY --lib $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) --output . --tolower | tee cvtsrcpf_5035.log" \
+            --cmd "../ibmi_tobi_cvtsrcpf/bin/makei cvtsrcpf CCSID5035 $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
             --cmd "test -f ./.ibmi.json && echo 'CCSID5035 conversion successful' || { echo 'CCSID5035 conversion failed'; exit 1; }" \
             --cmd "rm -f ./.ibmi.json test35cpy.rpgle" \
             --cmd "echo cvtsrcpf tests completed successfully" \
