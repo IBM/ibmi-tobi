@@ -33,7 +33,7 @@ jobs:
         project:
           - { 
               name: tobi-example,
-              branch: integration-test,
+              branch: hexenc_example,
               lib: lib1,
               directory: functionsVAT,
               file: vat300.rpgle,
@@ -93,6 +93,25 @@ jobs:
             --cmd "touch ${{ matrix.project.directory }}/${{ matrix.project.file }}" \
             --cmd "../ibmi_tobi/bin/makei c -f ${{ matrix.project.directory }} -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) | tee secondCompile.log" \
             --cmd "grep '${{ matrix.project.secondCompile }}' secondCompile.log || { echo 'Second compile of ${{ matrix.project.secondCompile }} failed!'; exit 1; }" \
+            --cmd "echo Testing cvtsrcpf with hex codes..." \
+            --rcwd "../${{ matrix.project.name }}" \
+            --ignore --cl "CRTSRCPF FILE($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})/CCSID5026) CCSID(5026) RCDLEN(112)" \
+            --ignore --cl "CRTSRCPF FILE($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})/CCSID5035) CCSID(5035) RCDLEN(112)" \
+            --ignore --cl "CRTSRCPF FILE($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})/ALLHEXCODE) CCSID(37) RCDLEN(112)" \
+            --cl "CPYFRMSTMF FROMSTMF('./builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/TEST26.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/CCSID5026.FILE/TEST26CPY.MBR') STMFCCSID(5026) MBROPT(*REPLACE)" \
+            --cl "CPYFRMSTMF FROMSTMF('./builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/TEST35.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/CCSID5035.FILE/TEST35CPY.MBR') STMFCCSID(5035) MBROPT(*REPLACE)" \
+            --cl "CPYFRMSTMF FROMSTMF('./builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/ALLHEXCODE.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/ALLHEXCODE.FILE/ALLHXCPY.MBR') STMFCCSID(37) MBROPT(*REPLACE)" \
+            --cmd "../ibmi_tobi/bin/makei cvtsrcpf --srcfile ALLHXCPY --lib $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) --output . --tolower | tee cvtsrcpf_allhex.log" \
+            --cmd "test -f ./.ibmi.json && echo 'ALLHEXCODE conversion successful' || { echo 'ALLHEXCODE conversion failed'; exit 1; }" \
+            --cmd "rm -f ./.ibmi.json allhxcpy.rpgle" \
+            --cmd "../ibmi_tobi/bin/makei cvtsrcpf --srcfile TEST26CPY --lib $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) --output . --tolower | tee cvtsrcpf_5026.log" \
+            --cmd "test -f ./.ibmi.json && echo 'CCSID5026 conversion successful' || { echo 'CCSID5026 conversion failed'; exit 1; }" \
+            --cmd "rm -f ./.ibmi.json test26cpy.rpgle" \
+            --cmd "../ibmi_tobi/bin/makei cvtsrcpf --srcfile TEST35CPY --lib $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) --output . --tolower | tee cvtsrcpf_5035.log" \
+            --cmd "test -f ./.ibmi.json && echo 'CCSID5035 conversion successful' || { echo 'CCSID5035 conversion failed'; exit 1; }" \
+            --cmd "rm -f ./.ibmi.json test35cpy.rpgle" \
+            --cmd "echo cvtsrcpf tests completed successfully" \
+            --rcwd "../${{ matrix.project.name }}" \
             --cmd "echo Clean up..." \
             --ignore --cl "DLTLIB $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
             --rcwd "../../../github_ci/" \

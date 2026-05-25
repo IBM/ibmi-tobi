@@ -5,8 +5,10 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from makei.ibm_job import IBMJob
-from makei.utils import create_ibmi_json, objlib_to_path, validate_ccsid, check_keyword_in_file, get_style_dict
+from makei.utils import (create_ibmi_json, objlib_to_path, validate_ccsid, check_keyword_in_file, get_style_dict,
+                         get_iasp_prefix)
 from makei.const import MEMBER_TEXT_LINES, METADATA_HEADER, METADATA_FOOTER, TEXT_HEADER
+from makei.crtfrmstmf import resolve_tmp_lib
 
 
 class CvtSrcPf:
@@ -23,10 +25,14 @@ class CvtSrcPf:
     ibmi_json_path: Optional[Path]
     store_member_text: bool
     iasp: str
+    tmp_lib: str
+    tmp_src: str
+    rcdlen: int
 
     def __init__(
-        self, srcfile: str, lib: str, tolower: bool, default_ccsid: str = None,
-            text: bool = False, save_path: Path = Path.cwd(), iasp: str = "") -> None:
+        self, srcfile: str, lib: str, tolower: bool, default_ccsid: Optional[str] = None,
+            text: bool = False, save_path: Path = Path.cwd(), iasp: str = "",
+            rcdlen: int = 240, tmp_src: str = "QCVTSRC") -> None:
         self.job = IBMJob()
 
         self.lib = lib
@@ -41,6 +47,10 @@ class CvtSrcPf:
         self.tolower = tolower
         self.ibmi_json_path = save_path / ".ibmi.json"
         self.store_member_text = text
+        self.iasp_prefix = get_iasp_prefix(self.iasp)
+        self.tmp_src = tmp_src
+        self.rcdlen = rcdlen
+        self.tmp_lib = resolve_tmp_lib(self.lib, self.iasp)
 
     # for free form rpg, write_on_line = 1
     def insert_line(self, file_path, content, start_comment_characters: str, end_comment_characters: str,
@@ -110,7 +120,14 @@ class CvtSrcPf:
             dst_mbr_name = self._get_dst_mbr_name(src_mbr_name, src_mbr_ext, self.tolower)
             dst_mbr_path = self._get_dst_mbr_path(dst_mbr_name, src_mbr_name, src_mbr_ext, self.tolower)
 
-            if self._cvr_src_mbr(src_mbr_name, srcpath, dst_mbr_name, dst_mbr_path):
+            # Setup and copy source file to temporary location
+            self._setup_and_copy_source_file(src_mbr_name)
+
+            # Get the path to the temporary source file
+            tmp_srcpath = f"{self.iasp_prefix}/QSYS.LIB/{self.tmp_lib}.LIB/{self.tmp_src}.FILE"
+            print(f"**************Temporary source member path: {tmp_srcpath}")
+            # Convert from temporary location and process display attributes
+            if self._cvt_src_mbr(src_mbr_name, tmp_srcpath, dst_mbr_name, dst_mbr_path):
                 cvt_count += 1
                 if self.store_member_text:
                     result = self._get_member_text(src_mbr_name, srcpath)
@@ -162,12 +179,89 @@ class CvtSrcPf:
             dst_mbr_path = self.save_path / dst_mbr_name
         return dst_mbr_path
 
-    def _cvr_src_mbr(self, src_mbr_name, srcpath, dst_mbr_name, dst_mbr_path) -> bool:
-        """Convert the source member
+    def _setup_and_copy_source_file(self, src_mbr_name: str) -> None:
+        """Setup temporary source physical file and copy source member to it."""
+        # Delete existing temporary source file if it exists
+        self.job.run_cl(f'DLTF FILE({self.tmp_lib}/{self.tmp_src})', ignore_errors=True)
+        print(f"================={self.default_ccsid}=================")
+        # Create temporary source physical file using tgtCcsid from .ibmi.json
+        self.job.run_cl(
+            f'CRTSRCPF FILE({self.tmp_lib}/{self.tmp_src}) RCDLEN({self.rcdlen}) MBR(*NONE) '
+            f'CCSID({self.default_ccsid})', ignore_errors=False, log=True)
+
+        # Copy source member to temporary file using CPYSRCF
+        self.job.run_cl(
+            f'CPYSRCF FROMFILE({self.lib}/{self.srcfile}) '
+            f'TOFILE({self.tmp_lib}/{self.tmp_src}) '
+            f'FROMMBR({src_mbr_name}) '
+            f'MBROPT(*ADD)',
+            ignore_errors=False, log=True)
+
+        # Preprocess the member in QTEMP to remove hex codes before conversion
+        self._preprocess_member_hex_codes(src_mbr_name)
+
+    def _preprocess_member_hex_codes(self, src_mbr_name: str) -> None:
+        DISPLAY_ATTR_BYTES = set(range(0x20, 0x40))  # 0x20–0x3F
+
+        try:
+            sql_select = f"""
+                SELECT SRCSEQ,
+                    CAST(SRCDTA AS VARBINARY(32740)) AS RAW_DTA
+                FROM {self.tmp_lib}.{self.tmp_src}
+                ORDER BY SRCSEQ
+            """
+            results = self.job.run_sql(sql_select, ignore_errors=False, log=False)
+            if not results or not results[0]:
+                return
+
+            cleaned_count = 0
+            for srcseq, raw_dta in results[0]:
+                if raw_dta is None:
+                    continue
+
+                modified = False
+                in_dbcs = False
+                byte_list = list(raw_dta)
+
+                for i, b in enumerate(byte_list):
+                    if b == 0x0E:
+                        in_dbcs = True
+                        continue
+                    elif b == 0x0F:
+                        in_dbcs = False
+                        continue
+                    if in_dbcs:
+                        continue
+                    if b in DISPLAY_ATTR_BYTES:
+                        byte_list[i] = 0x40  # EBCDIC space
+                        modified = True
+
+                if modified:
+                    cleaned_count += 1
+                    cleaned_bytes = bytes(byte_list)
+                    # Convert bytes to hex string and embed directly in SQL
+                    # print(cleaned_bytes)
+                    hex_str = cleaned_bytes.hex().upper()
+                    # print(hex_str)
+                    sql_update = f"""
+                        UPDATE {self.tmp_lib}.{self.tmp_src}
+                        SET SRCDTA = CAST(X'{hex_str}' AS VARCHAR(32740) CCSID {self.default_ccsid})
+                        WHERE SRCSEQ = {srcseq}
+                    """
+                    self.job.run_sql(sql_update, ignore_errors=False, log=False)
+
+            if cleaned_count > 0:
+                print(f"Cleaned EBCDIC display attr bytes from {cleaned_count} line(s) in {src_mbr_name}")
+
+        except Exception as e:
+            print(f"Warning: Could not preprocess member {src_mbr_name}: {e}")
+
+    def _cvt_src_mbr(self, src_mbr_name, tmp_srcpath, dst_mbr_name, dst_mbr_path) -> bool:
+        """Convert the preprocessed source member from temporary location to final stream file
         """
         print(f"Converting {src_mbr_name} to {dst_mbr_name}")
         return self.job.run_cl(
-            f"CPYTOSTMF FROMMBR('{srcpath}/{src_mbr_name}.MBR') "
+            f"CPYTOSTMF FROMMBR('{tmp_srcpath}/{src_mbr_name}.MBR') "
             f"TOSTMF('{dst_mbr_path}') ENDLINFMT(*LF) STMFCCSID(1208) STMFOPT(*REPLACE)",
             ignore_errors=True, log=True)
 
