@@ -230,7 +230,6 @@ jobs:
             --cl "CPYFRMSTMF FROMSTMF('/home/BOBBUILD/builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/CCSID5026/test26.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/CCSID5026.FILE/TEST26CPY.MBR') STMFCCSID(5026) MBROPT(*REPLACE)" \
             --cl "CPYFRMSTMF FROMSTMF('/home/BOBBUILD/builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/CCSID5035/test35.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/CCSID5035.FILE/TEST35CPY.MBR') STMFCCSID(5035) MBROPT(*REPLACE)" \
             --cl "CPYFRMSTMF FROMSTMF('/home/BOBBUILD/builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/ALLHEXCODE/allhexcode.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/ALLHEXCODE.FILE/ALLHXCPY.MBR') STMFCCSID(37) MBROPT(*REPLACE)" \
-            --cmd "export lib1=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})"
             --cmd "../ibmi_tobi_cvtsrcpf/bin/makei cvtsrcpf ALLHEXCODE $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) -e lib1=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) | tee cvtsrcpf_allhex.log" \
             --cmd "test -f ./.ibmi.json && echo 'ALLHEXCODE conversion successful' || { echo 'ALLHEXCODE conversion failed'; exit 1; }" \
             --cmd "rm -f ./.ibmi.json allhxcpy.rpgle" \
