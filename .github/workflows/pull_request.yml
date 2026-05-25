@@ -213,14 +213,11 @@ jobs:
         run: |
           ici \
             --cmd "echo Setting up tobi..." \
-            --cmd "mkdir -p './builds/github_ci/${GITHUB_SHA}/ibmi_tobi'" \
             --rcwd "./builds/github_ci/${GITHUB_SHA}/ibmi_tobi" \
             --push "." \
             --cmd "echo Setting up ${{ matrix.project.name }}..." \
             --ignore --cl "CRTLIB $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
             --ignore --cl "CLRLIB $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
-            --cmd "rm -rf ../${{ matrix.project.name }}" \
-            --cmd "git clone https://github.com/IBM/${{ matrix.project.name }}.git ../${{ matrix.project.name }}" \
             --rcwd "../${{ matrix.project.name }}" \
             --cmd "git switch ${{ matrix.project.branch }}" \
             --cmd "echo Testing cvtsrcpf with hex codes..." \
