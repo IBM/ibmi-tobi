@@ -399,6 +399,7 @@ def handle_cvtsrcpf(args):
     """
     if args.log:
         print(colored("Warning: --trace has no effect on 'cvtsrcpf' command.", Colors.WARNING))
+    set_environment_vars(args)
     iasp = ""
     iproj_path = Path.cwd() / "iproj.json"
     if iproj_path.exists():
