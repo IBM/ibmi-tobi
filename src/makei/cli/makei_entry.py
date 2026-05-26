@@ -189,8 +189,8 @@ def add_cvtsrcpf_parser(subparsers: argparse.ArgumentParser):
         "--text",
         help='The generated source file will include the member text as a comment.',
         action='store_true'
-    ) 
-      
+    )
+
     cvtsrcpf_parser.add_argument(
         '-e',
         '--env',
