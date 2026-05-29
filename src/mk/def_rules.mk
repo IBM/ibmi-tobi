@@ -632,21 +632,27 @@ endef
 fileAUT = $(strip \
 	$(if $(filter %.DSPF,$<),$(DSPF_AUT), \
 	$(if $(filter %.dspf,$<),$(DSPF_AUT), \
+	$(if $(filter %.MNUDDS,$<),$(DSPF_AUT), \
+	$(if $(filter %.mnudds,$<),$(DSPF_AUT), \
 	$(if $(filter %.LF,$<),$(LF_AUT), \
 	$(if $(filter %.lf,$<),$(LF_AUT), \
 	$(if $(filter %.PF,$<),$(PF_AUT), \
 	$(if $(filter %.pf,$<),$(PF_AUT), \
 	$(if $(filter %.PRTF,$<),$(PRTF_AUT), \
 	$(if $(filter %.prtf,$<),$(PRTF_AUT), \
-	UNKNOWN_FILE_TYPE)))))))))
+	UNKNOWN_FILE_TYPE)))))))))))
 fileDFRWRT = $(strip \
 	$(if $(filter %.DSPF,$<),$(DSPF_DFRWRT), \
 	$(if $(filter %.dspf,$<),$(DSPF_DFRWRT), \
-	UNKNOWN_FILE_TYPE)))
+	$(if $(filter %.MNUDDS,$<),$(DSPF_DFRWRT), \
+	$(if $(filter %.mnudds,$<),$(DSPF_DFRWRT), \
+	UNKNOWN_FILE_TYPE)))))
 fileENHDSP = $(strip \
 	$(if $(filter %.DSPF,$<),$(DSPF_ENHDSP), \
 	$(if $(filter %.dspf,$<),$(DSPF_ENHDSP), \
-	UNKNOWN_FILE_TYPE)))
+	$(if $(filter %.MNUDDS,$<),$(DSPF_ENHDSP), \
+	$(if $(filter %.mnudds,$<),$(DSPF_ENHDSP), \
+	UNKNOWN_FILE_TYPE)))))
 fileDLTPCT = $(strip \
 	$(if $(filter %.PF,$<),$(PF_DLTPCT), \
 	$(if $(filter %.pf,$<),$(PF_DLTPCT), \
@@ -654,13 +660,15 @@ fileDLTPCT = $(strip \
 fileOPTION = $(strip \
 	$(if $(filter %.DSPF,$<),$(DSPF_OPTION), \
 	$(if $(filter %.dspf,$<),$(DSPF_OPTION), \
+	$(if $(filter %.MNUDDS,$<),$(DSPF_OPTION), \
+	$(if $(filter %.mnudds,$<),$(DSPF_OPTION), \
 	$(if $(filter %.LF,$<),$(LF_OPTION), \
 	$(if $(filter %.lf,$<),$(LF_OPTION), \
 	$(if $(filter %.PF,$<),$(PF_OPTION), \
 	$(if $(filter %.pf,$<),$(PF_OPTION), \
 	$(if $(filter %.PRTF,$<),$(PRTF_OPTION), \
 	$(if $(filter %.prtf,$<),$(PRTF_OPTION), \
-	UNKNOWN_FILE_TYPE)))))))))
+	UNKNOWN_FILE_TYPE)))))))))))
 filePAGESIZE = $(strip \
 	$(if $(filter %.PRTF,$<),$(PRTF_PAGESIZE), \
 	$(if $(filter %.prtf,$<),$(PRTF_PAGESIZE), \
@@ -672,7 +680,9 @@ fileREUSEDLT = $(strip \
 fileRSTDSP = $(strip \
 	$(if $(filter %.DSPF,$<),$(DSPF_RSTDSP), \
 	$(if $(filter %.dspf,$<),$(DSPF_RSTDSP), \
-	UNKNOWN_FILE_TYPE)))
+	$(if $(filter %.MNUDDS,$<),$(DSPF_RSTDSP), \
+	$(if $(filter %.mnudds,$<),$(DSPF_RSTDSP), \
+	UNKNOWN_FILE_TYPE)))))
 fileSIZE = $(strip \
 	$(if $(filter %.PF,$<),$(PF_SIZE), \
 	$(if $(filter %.pf,$<),$(PF_SIZE), \
@@ -1344,6 +1354,27 @@ define MENUSRC_TO_MENU_RECIPE =
 	@$(PRESETUP) \
 	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTMNU" -r $(RCDLEN) -p "$(CRTMNUFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
 	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+endef
+
+define MNUCMD_TO_MSGF_RECIPE =
+	$(eval d = $($@_d))
+	@$(call echo_cmd,"=== Creating MSGF from MNUCMD [$(notdir $<)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
+	$(eval crtcmd := $(SCRIPTSPATH)/mnucmd_to_msgf -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c CRTMSGF -p TEXT('$(TEXT)'))
+	@$(PRESETUP) \
+	$(SCRIPTSPATH)/mnucmd_to_msgf -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTMSGF" -p "TEXT('$(TEXT)')" --save-joblog "$(JOBLOGFILE)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+endef
+
+define FILE_MSGF_TO_MENU_RECIPE =
+	$(MENU_VARIABLES)
+	$(eval d = $($@_d))
+	$(eval MENUNAME = $(basename $(@F)))
+	$(eval DSPFNAME = $(basename $(notdir $(firstword $(filter %.FILE,$^)))))
+	$(eval MSGFNAME = $(basename $(notdir $(firstword $(filter %.MSGF,$^)))))
+	$(eval CRTMNUFLAGS := $(strip $(subst OPTION($(OPTION)),,$(filter-out TYPE(%),$(CRTMNUFLAGS)))))
+	@$(call echo_cmd,"=== Creating menu [$(MENUNAME)] from FILE and MSGF in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
+	$(eval crtcmd := CRTMNU MENU($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(MENUNAME)) TYPE(*DSPF) DSPF($(DSPFNAME)) MSGF($(MSGFNAME)) $(CRTMNUFLAGS))
+	@$(PRESETUP) \
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "" $(logFile) > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
 endef
 
 #   __  __  ___  ____  _   _ _     _____   ____           _
