@@ -57,6 +57,7 @@ These older IBM i source types are compiled directly from the IFS using the CRTF
 Note:
 
 * OPM COBOL .CBL cannot be supported because the OPM COBOL compiler calls RCLRSC which cannot be run from PASE
+* The `*MENU` object can be created from a `DSPF` object and a `MSGF` object. The `MSGF` is generated from `.MNUCMD` source using the `mnucmd_to_msgf.py` support, allowing menu definitions to be built from `DSPF` + `MSGF`.
 
 ## Support CL pseudo-source
 

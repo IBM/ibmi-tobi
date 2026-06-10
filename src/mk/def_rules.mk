@@ -1359,9 +1359,9 @@ endef
 define MNUCMD_TO_MSGF_RECIPE =
 	$(eval d = $($@_d))
 	@$(call echo_cmd,"=== Creating MSGF from MNUCMD [$(notdir $<)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
-	$(eval crtcmd := $(SCRIPTSPATH)/mnucmd_to_msgf -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c CRTMSGF -p TEXT('$(TEXT)'))
+	$(eval crtcmd := $(SCRIPTSPATH)/launch --mnucmd "$<" "$(call ESCAPE_FOR_RECIPE,$(OBJLIB))" "$(basename $(@F))" "$(TEXT)" "$(logFile)")
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/mnucmd_to_msgf -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTMSGF" -p "TEXT('$(TEXT)')" --save-joblog "$(JOBLOGFILE)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/launch --mnucmd "$<" "$(call ESCAPE_FOR_RECIPE,$(OBJLIB))" "$(basename $(@F))" "$(TEXT)" "$(JOBLOGFILE)" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
 endef
 
 define FILE_MSGF_TO_MENU_RECIPE =

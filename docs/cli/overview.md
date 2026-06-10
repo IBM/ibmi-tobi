@@ -4,4 +4,3 @@
 
 - `makei`
 - `crtfrmstmf`
-- `mnucmd_to_msgf`
