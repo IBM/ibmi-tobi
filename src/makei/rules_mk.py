@@ -153,6 +153,9 @@ class RulesMk:
         self.targets = {tgt_group + 's': [] for tgt_group in TARGET_GROUPS}
         self.src_obj_mapping = {}
         for rule in rules:
+            if rule.target.startswith("."):
+                print(f"Warning: Target '{rule.target}' is not supported")
+                sys.exit(1)
             if rule.source_file is not None:
                 decomposed_src = decompose_filename(rule.source_file)
                 src = f"{decomposed_src[0].upper()}.{decomposed_src[2].upper()}"
@@ -310,7 +313,7 @@ class RulesMk:
                 else:
                     # Wildcard %.TARGET: %.SOURCE DEP1 DEP2
                     line_split_by_space = line.strip().split()
-                    if line_split_by_space[0].startswith("%.") and line_split_by_space[1].startswith("%."):
+                    if line_split_by_space[0].startswith("%.") and len(line_split_by_space) > 1 and line_split_by_space[1].startswith("%."):
                         wildcard_targets.append(
                             (line_split_by_space[0].strip("%.").strip(":").upper(),
                              line_split_by_space[1].strip("%.").lower(),
@@ -353,7 +356,7 @@ class RulesMk:
         for wildcard, var in wildcard_variables.items():
             stripped_wildcard = wildcard.strip("%.").upper()
             matched_targets = [target for target in targets if target.endswith(f".{stripped_wildcard}")]
-            targets = list(filter(lambda target: target.split(".")[1] != stripped_wildcard, targets))
+            targets = list(filter(lambda target, sw=stripped_wildcard: not target.endswith(f".{sw}"), targets))
 
             for target in matched_targets:
                 if target not in variables:
