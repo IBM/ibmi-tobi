@@ -64,7 +64,18 @@ class MKRule:
     def __str__(self):
         # ESCAPE targets that contain $ and #
         escaped_target = escape_special_chars(self.target)
-        variable_assignment = ''.join(f"{escaped_target}: {variable}\n" for variable in self.variables)
+
+        # ESCAPE $ and # in variable values so Make does not expand them
+        def escape_variable_value(variable: str) -> str:
+            if '=' not in variable:
+                return variable
+            sep_idx = variable.index('=')
+            lhs = variable[:sep_idx + 1]
+            rhs = variable[sep_idx + 1:]
+            rhs = rhs.replace('$', 'DOLLARESCAPE_')
+            return lhs + rhs
+        variable_assignment = ''.join(
+            f"{escaped_target}: {escape_variable_value(variable)}\n" for variable in self.variables)
         # ESCAPE dependencies that contain $ and #
         escaped_deps = [
             escape_special_chars(dep)
@@ -360,7 +371,9 @@ class RulesMk:
                 filename_split = filename.split('.', 1)
 
                 if filename_split[-1].lower() == source_ext:
-                    target_object = (filename_split[0] + "." + target_ext).upper()
+                    from makei.build import BuildEnv
+                    target_object = (BuildEnv._escape_special_chars_internal(filename_split[0])
+                                     + "." + target_ext).upper()
                     if target_object not in targets:
                         recipe_str = (
                             target_object + ": " + filename_split[0] + "." + source_ext + " " + expanded_deps

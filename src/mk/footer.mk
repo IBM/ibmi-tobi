@@ -10,10 +10,9 @@ define escape_specials
 $(subst DOLLARESCAPE_,$$$$$$$,$(subst HASHESCAPE_,\#,$(1)))
 endef
 
-# Escape specials for source and dependency, but preserve HASHESCAPE_ and DOLLARESCAPE_ for object dependencies in OBJECT_TARGET_PATTERNS
-# Object dependencies should keep their escaped form (HASHESCAPE_, DOLLARESCAPE_) to match target names
+# Escape specials for source and dependency, but preserve HASHESCAPE_ and DOLLARESCAPE_ for object dependencies
 define escape_source
-$(if $(filter %.CMD %.FILE %.MENU %.MODULE %.PGM %.PNLGRP %.QMQRY %.SRVPGM %.TRG %.WSCST,$(1)),$(1),$(call escape_specials,$(1)))
+$(if $(filter $(d)/%,$(1)),$(call escape_specials,$(1)),$(1))
 endef
 
 ifdef TARGETS

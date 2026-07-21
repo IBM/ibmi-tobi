@@ -151,11 +151,9 @@ class BuildEnv:
         target_unescaped = self._unescape_special_chars(rule.target)
         target_path = objlib_path / target_unescaped
         # Determine source path (QSYS for objects, source dir for files)
-        source_ext = source_str.rsplit('.', 1)[-1].upper()
-        is_object_dependency = source_ext in TARGET_TARGETGROUPS_MAPPING
-        source_path = (objlib_path / source_str if is_object_dependency
-                       else Path(source_str) if Path(source_str).is_absolute()
-                       else rule.containing_dir / source_str)
+        source_path = (Path(source_str) if Path(source_str).is_absolute()
+                       else rule.containing_dir / source_str if rule.is_source_file
+                       else objlib_path / source_str)
         # Handle missing source
         if not source_path.exists():
             return not target_path.exists()
@@ -268,6 +266,8 @@ class BuildEnv:
                                     escaped_tgt = escape_special_chars(tgt)
                                     if escaped_tgt not in real_targets:
                                         real_targets.append(escaped_tgt)
+                                elif tgt not in real_targets:
+                                    real_targets.append(tgt)
             rules_mk.build_context = self
             rules_mk_build_path = rules_mk_path.parent / ".Rules.mk.build"
             rules_mk_build_path.write_text(str(rules_mk))
@@ -383,7 +383,6 @@ doublequotedINCDIR := {incdir.replace("'", "''")}
 IBMiEnvCmd := {self.ibmi_env_cmds}
 iasp := {self.iasp}
 COLOR_TTY := {'true' if self.color else 'false'}
-OBJECT_TARGET_PATTERNS := {target_patterns}
 
 OBJECT_TARGET_PATTERNS := {target_patterns}
 
