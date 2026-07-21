@@ -100,6 +100,7 @@ TARGET_TARGETGROUPS_MAPPING = {
     "MSGF": "MSG",
     "WSCST": "WSCST",
     "TRG": "TRG",
+    "TXT": "SQL",
 }
 
 FILE_TARGET_MAPPING = {

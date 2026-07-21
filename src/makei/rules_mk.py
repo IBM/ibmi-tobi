@@ -98,7 +98,10 @@ class MKRule:
                             break
                     result.append(dependency)
             else:
-                result.append(dependency)
+                if (self.containing_dir / dependency).exists():
+                    result.append('$(d)/' + dependency)
+                else:
+                    result.append(dependency)
         return result
 
     def __eq__(self, other):
