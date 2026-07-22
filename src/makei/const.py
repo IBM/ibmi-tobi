@@ -154,6 +154,7 @@ FILE_TARGET_MAPPING = {
     "SQLTRG": {"PGM"},
     "MSGF": {"MSGF"},
     "WSCSTSRC": {"WSCST"},
+    "TXT": {"TXT"},
 }
 # This is the maximum number of dot seperated parts in the file extensions defined above.
 FILE_MAX_EXT_LENGTH = max(
