@@ -66,7 +66,9 @@ class MKRule:
         try:
             target_type = self.target.split(".")[-1].upper()
             source_file = decompose_filename(self.source_file)[2].upper()
-            if target_type in ("SQL", "MSGF"):
+            if source_file == "QMQRY":
+                recipe_name = "SQL_TO_QMQRY_RECIPE"
+            elif target_type in ("SQL", "MSGF"):
                 recipe_name = f"{target_type}_RECIPE"
             elif target_type in ("PGM") and source_file in ("RPGLE", "SQLRPGLE"):
                 recipe_name = target_type + '.' + source_file + '_TO_' + self.target.split(".")[
@@ -232,6 +234,8 @@ class RulesMk:
         wildcard_targets = []
 
         recipe_env = False
+        wildcard_recipe_commands = []
+        wildcard_recipe_env = False
         recipe_str = ""
         dir_path = src_dir.joinpath(containing_dir)  # directory with the source code
 
@@ -262,6 +266,16 @@ class RulesMk:
                 rules.append(MKRule.from_str(recipe_str, containing_dir, include_dirs))
                 recipe_env = False
                 recipe_str = ""
+            # wildcard recipe collection
+            if wildcard_recipe_env:
+                if re.match(r'\s', line):
+                    wildcard_recipe_commands.append(line.strip())
+                    continue
+                # Seal the collected commands into the last wildcard_targets entry.
+                target_ext, source_ext, deps, _ = wildcard_targets[-1]
+                wildcard_targets[-1] = (target_ext, source_ext, deps, list(wildcard_recipe_commands))
+                wildcard_recipe_env = False
+                wildcard_recipe_commands = []
 
             if line.startswith('#') or line == '':
                 # Comment line or empty line
@@ -314,8 +328,11 @@ class RulesMk:
                         wildcard_targets.append(
                             (line_split_by_space[0].strip("%.").strip(":").upper(),
                              line_split_by_space[1].strip("%.").lower(),
-                             ' '.join(line_split_by_space[2:]) if len(line_split_by_space) > 2 else '')
-                             )
+                             ' '.join(line_split_by_space[2:]) if len(line_split_by_space) > 2 else '',
+                             [])
+                        )
+                        wildcard_recipe_env = True
+                        wildcard_recipe_commands = []
                     else:
                         # recipe
                         recipe_env = True
@@ -328,9 +345,12 @@ class RulesMk:
         if recipe_env:
             targets.append(recipe_str.split(":")[0].upper())
             rules.append(MKRule.from_str(recipe_str, containing_dir, include_dirs))
-
+        if wildcard_recipe_env:
+            # File ended while still collecting a wildcard recipe — seal it.
+            target_ext, source_ext, deps, _ = wildcard_targets[-1]
+            wildcard_targets[-1] = (target_ext, source_ext, deps, list(wildcard_recipe_commands))
         # Create all the rules for the wildcard rule declaration
-        for target_ext, source_ext, dependencies in wildcard_targets:
+        for target_ext, source_ext, dependencies, wildcard_commands in wildcard_targets:
             # Expand any variables in the dependencies
             expanded_deps = dependencies
             for var_name, var_value in rules_mk_variables.items():
@@ -343,10 +363,18 @@ class RulesMk:
                 if filename_split[-1].lower() == source_ext:
                     target_object = (filename_split[0] + "." + target_ext).upper()
                     if target_object not in targets:
-                        recipe_str = (
-                            target_object + ": " + filename_split[0] + "." + source_ext + " " + expanded_deps
-                        ).strip() + '\n'
-                        rules.append(MKRule.from_str(recipe_str, containing_dir, include_dirs))
+                        if wildcard_commands:
+                            source_name = filename_split[0] + "." + source_ext
+                            deps_list = expanded_deps.split() if expanded_deps else []
+                            rule = MKRule(target_object, [source_name] + deps_list,
+                                          list(wildcard_commands), [], containing_dir, include_dirs)
+                        else:
+                            recipe_str = (
+                                target_object + ": " + filename_split[0] + "." + source_ext
+                                + (" " + expanded_deps if expanded_deps else "")
+                            ).strip() + '\n'
+                            rule = MKRule.from_str(recipe_str, containing_dir, include_dirs)
+                        rules.append(rule)
                         targets.append(target_object)
 
         # Updates variables with wildcard values

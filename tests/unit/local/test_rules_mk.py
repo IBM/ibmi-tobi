@@ -1377,3 +1377,78 @@ SIMPLE.PGM_DEP=DATACPY.CBL
 SIMPLE.PGM_RECIPE=CBL_TO_PGM_RECIPE
 """
     )
+
+
+def test_wildcardcust():
+    root_dir = data_dir / "qmqry_wildcard"
+    root_rules_mk = RulesMk.from_file(root_dir / "wildcardcust.rules.mk", root_dir)
+    assert root_rules_mk.containing_dir == root_dir
+    assert root_rules_mk.subdirs == ["QQMQRYSRC"]
+    assert root_rules_mk.rules == []
+
+    test_dir = data_dir / "qmqry_wildcard" / "QQMQRYSRC"
+    rules_mk = RulesMk.from_file(test_dir / "Rules.mk", test_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": [],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": [],
+        "SRVPGMs": [],
+        "PGMs": [],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": ["HELLO1.QMQRY", "HELLO2.QMQRY"],
+        "WSCSTs": [],
+        "MSGs": [],
+    }
+    assert rules_mk.containing_dir == test_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    commands0 = [
+        "@$(call echo_cmd,=== Creating [HELLO1.QMQRY] from custom recipe)",
+        'system "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"',
+        "@$(call echo_success_cmd,End of creating HELLO1.QMQRY!)",
+    ]
+
+    assert rules_mk.rules[0].variables == []
+    assert rules_mk.rules[0].commands == commands0
+    assert rules_mk.rules[0].dependencies == ["HELLO1.qmqry"]
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == "HELLO1.QMQRY"
+    assert rules_mk.rules[0].source_file is None
+
+    commands1 = [
+        "@$(call echo_cmd,=== Creating [HELLO2.QMQRY] from custom recipe)",
+        'system "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"',
+        "@$(call echo_success_cmd,End of creating HELLO2.QMQRY!)",
+    ]
+
+    assert rules_mk.rules[1].variables == []
+    assert rules_mk.rules[1].commands == commands1
+    assert rules_mk.rules[1].dependencies == ["HELLO2.qmqry"]
+    assert rules_mk.rules[1].include_dirs == []
+    assert rules_mk.rules[1].target == "HELLO2.QMQRY"
+    assert rules_mk.rules[1].source_file is None
+
+    assert (
+        str(rules_mk)
+        == "QMQRYs := HELLO1.QMQRY HELLO2.QMQRY\n\n\n"
+           "HELLO1.QMQRY_CUSTOM_RECIPE=true\n"
+           "HELLO1.QMQRY : $(d)/HELLO1.qmqry\n"
+           "\t@$(call echo_cmd,=== Creating [HELLO1.QMQRY] from custom recipe)\n"
+           '\tsystem "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"\n'
+           "\t@$(call echo_success_cmd,End of creating HELLO1.QMQRY!)\n"
+           "HELLO2.QMQRY_CUSTOM_RECIPE=true\n"
+           "HELLO2.QMQRY : $(d)/HELLO2.qmqry\n"
+           "\t@$(call echo_cmd,=== Creating [HELLO2.QMQRY] from custom recipe)\n"
+           '\tsystem "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"\n'
+           "\t@$(call echo_success_cmd,End of creating HELLO2.QMQRY!)\n"
+    )
