@@ -29,7 +29,8 @@ TARGET_GROUPS = ["TRG",
                  "PNLGRP",
                  "QMQRY",
                  "WSCST",
-                 "MSG"
+                 "MSG",
+                 "TXT"
                  ]
 
 FILE_TARGETGROUPS_MAPPING = {
@@ -83,6 +84,7 @@ FILE_TARGETGROUPS_MAPPING = {
     "MSGF": {"MSG"},
     "WSCSTSRC": {"WSCST"},
     "SQLVAR": {"SRVPGM"},
+    "TXT": {"TXT"},
 }
 
 TARGET_TARGETGROUPS_MAPPING = {
@@ -100,7 +102,7 @@ TARGET_TARGETGROUPS_MAPPING = {
     "MSGF": "MSG",
     "WSCST": "WSCST",
     "TRG": "TRG",
-    "TXT": "SQL",
+    "TXT": "TXT",
 }
 
 FILE_TARGET_MAPPING = {
