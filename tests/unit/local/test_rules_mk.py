@@ -1377,3 +1377,76 @@ SIMPLE.PGM_DEP=DATACPY.CBL
 SIMPLE.PGM_RECIPE=CBL_TO_PGM_RECIPE
 """
     )
+
+
+def test_sqlrpgle_recipe():
+    rules_mk = RulesMk.from_file(data_dir / "ppmin.rules.mk", data_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": [],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": ["MAINPGM.MODULE"],
+        "SRVPGMs": [],
+        "PGMs": ["MAINPGM.PGM"],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": [],
+        "WSCSTs": [],
+        "MSGs": [],
+    }
+    assert rules_mk.src_obj_mapping["MAINPGM.SQLRPGLE"] == [
+        "MAINPGM.PGM",
+        "MAINPGM.MODULE",
+    ]
+    assert rules_mk.containing_dir == data_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    assert rules_mk.rules[0].variables == ["PPMINOUTLN=129"]
+    assert rules_mk.rules[0].commands == []
+    assert rules_mk.rules[0].dependencies == ["QPROTOSRC/longmbr.rpgle"]
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == "MAINPGM.PGM"
+    assert rules_mk.rules[0].source_file == "MAINPGM.SQLRPGLE"
+    assert (
+        str(rules_mk.rules[0])
+        == """MAINPGM.PGM_SRC=MAINPGM.SQLRPGLE
+MAINPGM.PGM_DEP=QPROTOSRC/longmbr.rpgle
+MAINPGM.PGM_RECIPE=PGM.SQLRPGLE_TO_PGM_RECIPE
+MAINPGM.PGM: PPMINOUTLN=129
+""")
+    assert rules_mk.rules[1].variables == ["PPMINOUTLN=129"]
+    assert rules_mk.rules[1].commands == []
+    assert rules_mk.rules[1].dependencies == ["QPROTOSRC/longmbr.rpgle"]
+    assert rules_mk.rules[1].include_dirs == []
+    assert rules_mk.rules[1].target == "MAINPGM.MODULE"
+    assert rules_mk.rules[1].source_file == "MAINPGM.SQLRPGLE"
+    assert (
+        str(rules_mk.rules[1])
+        == """MAINPGM.MODULE_SRC=MAINPGM.SQLRPGLE
+MAINPGM.MODULE_DEP=QPROTOSRC/longmbr.rpgle
+MAINPGM.MODULE_RECIPE=SQLRPGLE_TO_MODULE_RECIPE
+MAINPGM.MODULE: PPMINOUTLN=129
+""")
+    assert (
+        str(rules_mk)
+        == """MODULEs := MAINPGM.MODULE
+PGMs := MAINPGM.PGM
+
+
+MAINPGM.PGM_SRC=MAINPGM.SQLRPGLE
+MAINPGM.PGM_DEP=QPROTOSRC/longmbr.rpgle
+MAINPGM.PGM_RECIPE=PGM.SQLRPGLE_TO_PGM_RECIPE
+MAINPGM.PGM: PPMINOUTLN=129
+MAINPGM.MODULE_SRC=MAINPGM.SQLRPGLE
+MAINPGM.MODULE_DEP=QPROTOSRC/longmbr.rpgle
+MAINPGM.MODULE_RECIPE=SQLRPGLE_TO_MODULE_RECIPE
+MAINPGM.MODULE: PPMINOUTLN=129
+""")

@@ -100,6 +100,7 @@ The current list of overrideable compile attributes is:
 - PAGESIZE
 - PGM
 - PMTFILE
+- PPMINOUTLN
 - PRDLIB
 - REUSEDLT
 - RPGPPOPT
