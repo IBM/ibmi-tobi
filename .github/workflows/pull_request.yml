@@ -229,8 +229,11 @@ jobs:
             --ignore --cl "CRTSRCPF FILE($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})/CCSID5035) CCSID(5035) RCDLEN(112)" \
             --ignore --cl "CRTSRCPF FILE($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})/ALLHEXCODE) CCSID(37) RCDLEN(112)" \
             --cl "CPYFRMSTMF FROMSTMF('/home/BOBBUILD/builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/CCSID5026/test26.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/CCSID5026.FILE/TEST26CPY.MBR') MBROPT(*REPLACE)" \
+            --cl "CHGPFM FILE($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})/CCSID5026) MBR(TEST26CPY) SRCTYPE(RPGLE)"
             --cl "CPYFRMSTMF FROMSTMF('/home/BOBBUILD/builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/CCSID5035/test35.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/CCSID5035.FILE/TEST35CPY.MBR') MBROPT(*REPLACE)" \
+            --cl "CHGPFM FILE($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})/CCSID5035) MBR(TEST35CPY) SRCTYPE(RPGLE)"
             --cl "CPYFRMSTMF FROMSTMF('/home/BOBBUILD/builds/github_ci/${GITHUB_SHA}/${{ matrix.project.name }}/HEXENC/ALLHEXCODE/allhexcode.rpgle') TOMBR('/QSYS.LIB/$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}).LIB/ALLHEXCODE.FILE/ALLHXCPY.MBR') MBROPT(*REPLACE)" \
+            --cl "CHGPFM FILE($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})/ALLHEXCODE) MBR(ALLHXCPY) SRCTYPE(RPGLE)"
             --cmd "../ibmi_tobi_cvtsrcpf/bin/makei cvtsrcpf ALLHEXCODE $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}) -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
             --cmd "test -f ./.ibmi.json && echo 'ALLHEXCODE conversion successful' || { echo 'ALLHEXCODE conversion failed'; exit 1; }" \
             --cmd "rm -f ./.ibmi.json allhxcpy.rpgle" \
