@@ -190,6 +190,7 @@ jobs:
   cvtsrcpf-test:
     name: Hexencoding ${{ matrix.project.name }}
     runs-on: ubuntu-latest
+    needs: project-build  # Waits for project-build to complete successfully
     environment: COMMON1
     strategy:
       matrix:
