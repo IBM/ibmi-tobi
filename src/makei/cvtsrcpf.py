@@ -125,6 +125,7 @@ class CvtSrcPf:
 
             # Get the path to the temporary source file
             tmp_srcpath = f"{self.iasp_prefix}/QSYS.LIB/{self.tmp_lib}.LIB/{self.tmp_src}.FILE"
+            print(f"**************Temporary source member path: {tmp_srcpath}")
             # Convert from temporary location and process display attributes
             if self._cvt_src_mbr(src_mbr_name, tmp_srcpath, dst_mbr_name, dst_mbr_path):
                 cvt_count += 1
@@ -182,10 +183,11 @@ class CvtSrcPf:
         """Setup temporary source physical file and copy source member to it."""
         # Delete existing temporary source file if it exists
         self.job.run_cl(f'DLTF FILE({self.tmp_lib}/{self.tmp_src})', ignore_errors=True)
+        print(f"================={self.default_ccsid}=================")
         # Create temporary source physical file using tgtCcsid from .ibmi.json
         self.job.run_cl(
             f'CRTSRCPF FILE({self.tmp_lib}/{self.tmp_src}) RCDLEN({self.rcdlen}) MBR(*NONE) '
-            f'CCSID({self.default_ccsid})', ignore_errors=False, log=False)
+            f'CCSID({self.default_ccsid})', ignore_errors=False, log=True)
 
         # Copy source member to temporary file using CPYSRCF
         self.job.run_cl(
@@ -193,7 +195,7 @@ class CvtSrcPf:
             f'TOFILE({self.tmp_lib}/{self.tmp_src}) '
             f'FROMMBR({src_mbr_name}) '
             f'MBROPT(*ADD)',
-            ignore_errors=False, log=False)
+            ignore_errors=False, log=True)
 
         # Preprocess the member in QTEMP to remove hex codes before conversion
         self._preprocess_member_hex_codes(src_mbr_name)
