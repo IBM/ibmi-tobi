@@ -74,8 +74,8 @@ jobs:
             --cmd "echo Setting up ${{ matrix.project.name }}..." \
             --ignore --cl "CRTLIB $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
             --ignore --cl "CLRLIB $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
-            --cmd --cl "ADDLIBLE LIB($(so -bl ${GITHUB_HEAD_REF}_tobi-example)) POSITION(*FIRST)" \
-            --cmd --cl "CHGCURLIB $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
+            --cl "ADDLIBLE LIB($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})) POSITION(*FIRST)" \
+            --cl "CHGCURLIB CURLIB($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}))" \
             --cmd "rm -rf ../${{ matrix.project.name }}" \
             --cmd "git clone https://github.com/IBM/${{ matrix.project.name }}.git ../${{ matrix.project.name }}" \
             --rcwd "../${{ matrix.project.name }}" \
