@@ -76,6 +76,7 @@ jobs:
             --ignore --cl "CLRLIB $(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})" \
             --cl "ADDLIBLE LIB($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }})) POSITION(*FIRST)" \
             --cl "CHGCURLIB CURLIB($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}))" \
+            --cmd "system 'DSPLIBL' " \
             --cmd "rm -rf ../${{ matrix.project.name }}" \
             --cmd "git clone https://github.com/IBM/${{ matrix.project.name }}.git ../${{ matrix.project.name }}" \
             --rcwd "../${{ matrix.project.name }}" \
