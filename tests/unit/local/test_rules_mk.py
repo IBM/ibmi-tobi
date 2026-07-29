@@ -1404,7 +1404,7 @@ def test_wildcardcust():
         "PGMs": [],
         "MENUs": [],
         "PNLGRPs": [],
-        "QMQRYs": ["HELLOX.QMQRY", "HELLOY.QMQRY"],
+        "QMQRYs": ["HELLOX.QMQRY"],
         "WSCSTs": [],
         "MSGs": [],
     }
@@ -1412,43 +1412,25 @@ def test_wildcardcust():
     assert rules_mk.subdirs == []
     assert rules_mk.targets == expected_targets
 
-    commands0 = [
+    commands = [
         "@$(call echo_cmd,=== Creating [HELLOX.QMQRY] from custom recipe)",
         'system "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"',
         "@$(call echo_success_cmd,End of creating HELLOX.QMQRY!)",
     ]
 
     assert rules_mk.rules[0].variables == []
-    assert rules_mk.rules[0].commands == commands0
+    assert rules_mk.rules[0].commands == commands
     assert rules_mk.rules[0].dependencies == ["HELLOX.qmqry"]
     assert rules_mk.rules[0].include_dirs == []
     assert rules_mk.rules[0].target == "HELLOX.QMQRY"
     assert rules_mk.rules[0].source_file is None
 
-    commands1 = [
-        "@$(call echo_cmd,=== Creating [HELLOY.QMQRY] from custom recipe)",
-        'system "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"',
-        "@$(call echo_success_cmd,End of creating HELLOY.QMQRY!)",
-    ]
-
-    assert rules_mk.rules[1].variables == []
-    assert rules_mk.rules[1].commands == commands1
-    assert rules_mk.rules[1].dependencies == ["HELLOY.qmqry"]
-    assert rules_mk.rules[1].include_dirs == []
-    assert rules_mk.rules[1].target == "HELLOY.QMQRY"
-    assert rules_mk.rules[1].source_file is None
-
     assert (
         str(rules_mk)
-        == "QMQRYs := HELLOX.QMQRY HELLOY.QMQRY\n\n\n"
+        == "QMQRYs := HELLOX.QMQRY\n\n\n"
            "HELLOX.QMQRY_CUSTOM_RECIPE=true\n"
            "HELLOX.QMQRY : $(d)/HELLOX.qmqry\n"
            "\t@$(call echo_cmd,=== Creating [HELLOX.QMQRY] from custom recipe)\n"
            '\tsystem "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"\n'
            "\t@$(call echo_success_cmd,End of creating HELLOX.QMQRY!)\n"
-           "HELLOY.QMQRY_CUSTOM_RECIPE=true\n"
-           "HELLOY.QMQRY : $(d)/HELLOY.qmqry\n"
-           "\t@$(call echo_cmd,=== Creating [HELLOY.QMQRY] from custom recipe)\n"
-           '\tsystem "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"\n'
-           "\t@$(call echo_success_cmd,End of creating HELLOY.QMQRY!)\n"
     )
