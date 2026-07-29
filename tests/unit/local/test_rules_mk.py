@@ -1404,7 +1404,7 @@ def test_wildcardcust():
         "PGMs": [],
         "MENUs": [],
         "PNLGRPs": [],
-        "QMQRYs": ["HELLO1.QMQRY", "HELLO2.QMQRY"],
+        "QMQRYs": ["HELLOX.QMQRY", "HELLOY.QMQRY"],
         "WSCSTs": [],
         "MSGs": [],
     }
@@ -1413,42 +1413,42 @@ def test_wildcardcust():
     assert rules_mk.targets == expected_targets
 
     commands0 = [
-        "@$(call echo_cmd,=== Creating [HELLO1.QMQRY] from custom recipe)",
+        "@$(call echo_cmd,=== Creating [HELLOX.QMQRY] from custom recipe)",
         'system "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"',
-        "@$(call echo_success_cmd,End of creating HELLO1.QMQRY!)",
+        "@$(call echo_success_cmd,End of creating HELLOX.QMQRY!)",
     ]
 
     assert rules_mk.rules[0].variables == []
     assert rules_mk.rules[0].commands == commands0
-    assert rules_mk.rules[0].dependencies == ["HELLO1.qmqry"]
+    assert rules_mk.rules[0].dependencies == ["HELLOX.qmqry"]
     assert rules_mk.rules[0].include_dirs == []
-    assert rules_mk.rules[0].target == "HELLO1.QMQRY"
+    assert rules_mk.rules[0].target == "HELLOX.QMQRY"
     assert rules_mk.rules[0].source_file is None
 
     commands1 = [
-        "@$(call echo_cmd,=== Creating [HELLO2.QMQRY] from custom recipe)",
+        "@$(call echo_cmd,=== Creating [HELLOY.QMQRY] from custom recipe)",
         'system "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"',
-        "@$(call echo_success_cmd,End of creating HELLO2.QMQRY!)",
+        "@$(call echo_success_cmd,End of creating HELLOY.QMQRY!)",
     ]
 
     assert rules_mk.rules[1].variables == []
     assert rules_mk.rules[1].commands == commands1
-    assert rules_mk.rules[1].dependencies == ["HELLO2.qmqry"]
+    assert rules_mk.rules[1].dependencies == ["HELLOY.qmqry"]
     assert rules_mk.rules[1].include_dirs == []
-    assert rules_mk.rules[1].target == "HELLO2.QMQRY"
+    assert rules_mk.rules[1].target == "HELLOY.QMQRY"
     assert rules_mk.rules[1].source_file is None
 
     assert (
         str(rules_mk)
-        == "QMQRYs := HELLO1.QMQRY HELLO2.QMQRY\n\n\n"
-           "HELLO1.QMQRY_CUSTOM_RECIPE=true\n"
-           "HELLO1.QMQRY : $(d)/HELLO1.qmqry\n"
-           "\t@$(call echo_cmd,=== Creating [HELLO1.QMQRY] from custom recipe)\n"
+        == "QMQRYs := HELLOX.QMQRY HELLOY.QMQRY\n\n\n"
+           "HELLOX.QMQRY_CUSTOM_RECIPE=true\n"
+           "HELLOX.QMQRY : $(d)/HELLOX.qmqry\n"
+           "\t@$(call echo_cmd,=== Creating [HELLOX.QMQRY] from custom recipe)\n"
            '\tsystem "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"\n'
-           "\t@$(call echo_success_cmd,End of creating HELLO1.QMQRY!)\n"
-           "HELLO2.QMQRY_CUSTOM_RECIPE=true\n"
-           "HELLO2.QMQRY : $(d)/HELLO2.qmqry\n"
-           "\t@$(call echo_cmd,=== Creating [HELLO2.QMQRY] from custom recipe)\n"
+           "\t@$(call echo_success_cmd,End of creating HELLOX.QMQRY!)\n"
+           "HELLOY.QMQRY_CUSTOM_RECIPE=true\n"
+           "HELLOY.QMQRY : $(d)/HELLOY.qmqry\n"
+           "\t@$(call echo_cmd,=== Creating [HELLOY.QMQRY] from custom recipe)\n"
            '\tsystem "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"\n'
-           "\t@$(call echo_success_cmd,End of creating HELLO2.QMQRY!)\n"
+           "\t@$(call echo_success_cmd,End of creating HELLOY.QMQRY!)\n"
     )
