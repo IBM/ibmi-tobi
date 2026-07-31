@@ -40,7 +40,7 @@ fi
 
 IFS=$'\\n'
 echo "$IBMiEnvCmd"
-if [ ! -z "$IBMiEnvCmd" ] && echo "$IBMiEnvCmd" | grep -qi "SETASPGRP"; then
+if [ ! -z "$IBMiEnvCmd" ]; then
   for envcmd in $IBMiEnvCmd; do
     [[ ! -z "$envcmd" ]] && cl "$envcmd"
   done
