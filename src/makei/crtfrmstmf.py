@@ -146,18 +146,24 @@ class CrtFrmStmf():
             if len(self.back_up_obj_list) > 0:
                 self._restore_objs()
 
-            # Process the event file
-        if "*EVENTF" in cmd or "*SRCDBG" in cmd or "*LSTDBG" in cmd:
-            if self.lib == "*CURLIB":
-                self.lib = self._retrieve_current_library()
-            if self.lib == "*NONE":
-                self.lib = "*QGPL"
-            self._update_event_file('37')
+        # Process the event file
+        try:
+            if "*EVENTF" in cmd or "*SRCDBG" in cmd or "*LSTDBG" in cmd:
+                if self.lib == "*CURLIB":
+                    self.lib = self._retrieve_current_library()
+                if self.lib == "*NONE":
+                    self.lib = "*QGPL"
+                self._update_event_file('37')
+        except Exception as exc:
+            print(f"Event-file update failed for {self.lib}/{self.obj}: {exc}")
 
-        if self.joblog_path is not None:
-            save_joblog_json(cmd, format_datetime(
-                run_datetime), self.job.job_id, self.obj + "." + self.obj_type, self.srcstmf, self.output,
-                  not success, self.joblog_path, filter_joblogs)
+        try:
+            if self.joblog_path is not None:
+                save_joblog_json(cmd, format_datetime(
+                    run_datetime), self.job.job_id, self.obj + "." + self.obj_type, self.srcstmf, self.output,
+                    not success, self.joblog_path, filter_joblogs)
+        except Exception as exc:
+            print(f"Joblog save failed for {self.lib}/{self.obj}: {exc}")
         return success
 
     def setup_env(self):
