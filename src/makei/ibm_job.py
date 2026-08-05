@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.9
 # -*- coding: utf-8 -*-
 
+import fcntl
 import json
 import sys
 from contextlib import closing
@@ -145,14 +146,22 @@ def save_joblog_json(cmd: str, cmd_time: str, jobid: str, build_object: str, sou
 
     if joblog_json is not None:
         joblog_json_path = Path(joblog_json)
-        if joblog_json_path.is_file():
-            with joblog_json_path.open(encoding="utf-8") as json_file:
-                data = json.load(json_file)
-                data.append(dumped_joblog)
-        else:
-            data = [dumped_joblog]
+        # Use an exclusive lock so parallel make jobs (-j N) cannot
+        # interleave their read-modify-write on the shared file.
+        lock_path = joblog_json_path.with_suffix(".lock")
+        with lock_path.open("w") as lock_file:
+            fcntl.flock(lock_file, fcntl.LOCK_EX)
+            try:
+                if joblog_json_path.is_file():
+                    with joblog_json_path.open(encoding="utf-8") as json_file:
+                        data = json.load(json_file)
+                        data.append(dumped_joblog)
+                else:
+                    data = [dumped_joblog]
 
-        with joblog_json_path.open('w', encoding="utf-8") as json_file:
-            json.dump(data, json_file, indent=4)
+                with joblog_json_path.open('w', encoding="utf-8") as json_file:
+                    json.dump(data, json_file, indent=4)
+            finally:
+                fcntl.flock(lock_file, fcntl.LOCK_UN)
     else:
         print(json.dumps([dumped_joblog], indent=4))
