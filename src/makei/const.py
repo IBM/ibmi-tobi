@@ -29,7 +29,8 @@ TARGET_GROUPS = ["TRG",
                  "PNLGRP",
                  "QMQRY",
                  "WSCST",
-                 "MSG"
+                 "MSG",
+                 "TXT"
                  ]
 
 FILE_TARGETGROUPS_MAPPING = {
@@ -85,6 +86,7 @@ FILE_TARGETGROUPS_MAPPING = {
     "MSGF": {"MSG"},
     "WSCSTSRC": {"WSCST"},
     "SQLVAR": {"SRVPGM"},
+    "TXT": {"TXT"},
 }
 
 TARGET_TARGETGROUPS_MAPPING = {
@@ -102,6 +104,7 @@ TARGET_TARGETGROUPS_MAPPING = {
     "MSGF": "MSG",
     "WSCST": "WSCST",
     "TRG": "TRG",
+    "TXT": "TXT",
 }
 
 FILE_TARGET_MAPPING = {
@@ -158,6 +161,7 @@ FILE_TARGET_MAPPING = {
     "SQLTRG": {"PGM"},
     "MSGF": {"MSGF"},
     "WSCSTSRC": {"WSCST"},
+    "TXT": {"TXT"},
 }
 # This is the maximum number of dot seperated parts in the file extensions defined above.
 FILE_MAX_EXT_LENGTH = max(
