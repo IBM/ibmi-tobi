@@ -89,9 +89,6 @@ class MnucmdToMsgf:
         Raises:
             RuntimeError: If message file creation fails
         """
-        self.job.run_cl(
-            f"DLTMSGF MSGF({self.msgf_lib}/{self.msgf_name})", ignore_errors=True, log=True)
-
         cmd_to_run = [f"CRTMSGF MSGF({self.msgf_lib}/{self.msgf_name}) TEXT('{self.text}')"]
         for seq, command in sorted(self.commands.items()):
             msg_id = f"USR{seq.zfill(4)}"
@@ -140,13 +137,9 @@ def main():
     text = sys.argv[4]
     jlog = sys.argv[5]
     outlog = sys.argv[6]
-    try:
-        converter = MnucmdToMsgf(source_file, msgf_lib, msgf_name, text, jlog, outlog)
-        converter.convert()
 
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+    converter = MnucmdToMsgf(source_file, msgf_lib, msgf_name, text, jlog, outlog)
+    converter.convert()
 
 
 if __name__ == '__main__':
