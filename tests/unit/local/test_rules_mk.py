@@ -1497,7 +1497,7 @@ def test_wildcardcust():
         "QMQRYs": ["HELLOX.QMQRY"],
         "WSCSTs": [],
         "MSGs": [],
-        "TXTs": [] 
+        "TXTs": []
     }
     assert rules_mk.containing_dir == test_dir
     assert rules_mk.subdirs == []
