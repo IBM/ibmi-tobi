@@ -70,6 +70,14 @@ class IProjJson:
                 return src_dict[key]
             return default_value
 
+        def get_usr_libl(key_capital, key_lower, src_dict):
+            """Accept both 'preUsrLibl' (capital L) and 'preUsrlibl' (lowercase l)"""
+            if key_capital in src_dict:
+                return src_dict[key_capital]
+            if key_lower in src_dict:
+                return src_dict[key_lower]
+            return []
+
         try:
             with file_path.open() as file:
                 iproj_json = json.load(file)
@@ -83,9 +91,9 @@ class IProjJson:
                     else:
                         objlib = curlib
 
-                pre_usr_libl = list(map(parse_all_variables, with_default_value("preUsrlibl", [], iproj_json)))
+                pre_usr_libl = list(map(parse_all_variables, get_usr_libl("preUsrLibl", "preUsrlibl", iproj_json)))
 
-                post_usr_libl = list(map(parse_all_variables, with_default_value("postUsrlibl", [], iproj_json)))
+                post_usr_libl = list(map(parse_all_variables, get_usr_libl("postUsrLibl", "postUsrlibl", iproj_json)))
                 include_path = list(map(parse_all_variables, with_default_value("includePath", [], iproj_json)))
 
                 tgt_ccsid = with_default_value("tgtCcsid", "*JOB", iproj_json)
