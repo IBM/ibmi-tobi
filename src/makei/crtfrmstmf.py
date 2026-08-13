@@ -146,7 +146,7 @@ class CrtFrmStmf():
             if len(self.back_up_obj_list) > 0:
                 self._restore_objs()
 
-        # Process the event file
+            # Process the event file
         if "*EVENTF" in cmd or "*SRCDBG" in cmd or "*LSTDBG" in cmd:
             if self.lib == "*CURLIB":
                 self.lib = self._retrieve_current_library()
