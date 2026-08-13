@@ -1559,3 +1559,61 @@ FOOP.MENU_DEP=FOO1.MSGF
 FOOP.MENU_RECIPE=FILE_MSGF_TO_MENU_RECIPE
 """
     )
+
+
+def test_wildcardcust():
+    root_dir = data_dir / "qmqry_wildcard"
+    root_rules_mk = RulesMk.from_file(root_dir / "wildcardcust.rules.mk", root_dir)
+    assert root_rules_mk.containing_dir == root_dir
+    assert root_rules_mk.subdirs == ["QQMQRYSRC"]
+    assert root_rules_mk.rules == []
+
+    test_dir = data_dir / "qmqry_wildcard" / "QQMQRYSRC"
+    rules_mk = RulesMk.from_file(test_dir / "Rules.mk", test_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": [],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": [],
+        "SRVPGMs": [],
+        "PGMs": [],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": ["HELLOX.QMQRY"],
+        "WSCSTs": [],
+        "MSGs": [],
+        "TXTs": []
+    }
+    assert rules_mk.containing_dir == test_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    commands = [
+        "@$(call echo_cmd,=== Creating [HELLOX.QMQRY] from custom recipe)",
+        'system "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"',
+        "@$(call echo_success_cmd,End of creating HELLOX.QMQRY!)",
+    ]
+
+    assert rules_mk.rules[0].variables == []
+    assert rules_mk.rules[0].commands == commands
+    assert rules_mk.rules[0].dependencies == ["HELLOX.qmqry"]
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == "HELLOX.QMQRY"
+    assert rules_mk.rules[0].source_file is None
+
+    assert (
+        str(rules_mk)
+        == "QMQRYs := HELLOX.QMQRY\n\n\n"
+           "HELLOX.QMQRY_CUSTOM_RECIPE=true\n"
+           "HELLOX.QMQRY : $(d)/HELLOX.qmqry\n"
+           "\t@$(call echo_cmd,=== Creating [HELLOX.QMQRY] from custom recipe)\n"
+           '\tsystem "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"\n'
+           "\t@$(call echo_success_cmd,End of creating HELLOX.QMQRY!)\n"
+    )
