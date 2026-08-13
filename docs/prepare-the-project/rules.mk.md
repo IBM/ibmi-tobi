@@ -191,7 +191,7 @@ MOD_TGTRLS = V7R3M0
 
 The above two examples are equivalent. Note the use of wildcards for overriding compile settings for objects of the same type.
 
-> [!WARNING]
+> [NOTE]
 >
 > If the target and source share the same extension (e.g. `%.QMQRY: %.qmqry`), the source files **must** be placed in a subdirectory with its own `Rules.mk`. Placing them in the root directory will cause build failures.
 >
