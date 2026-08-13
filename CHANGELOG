@@ -1,3 +1,5 @@
+- Fixed false failures for *FILE targets during parallel make -j builds
+- Added support for .TXT files
 - Added support for Wildcards with custom commands in `Rules.mk`
 - Added support to create MENU using DSPF and MSGF objects
 * Fri May 08 2026 Het Patel <het.patel@ibm.com> - 3.3.0
