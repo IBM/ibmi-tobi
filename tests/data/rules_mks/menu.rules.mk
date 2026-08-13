@@ -1,0 +1,3 @@
+FOO.FILE: foo.mnudds
+FOO1.MSGF: fooqq.mnucmd
+FOOP.MENU: FOO.FILE FOO1.MSGF

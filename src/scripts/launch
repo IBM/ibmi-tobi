@@ -1,34 +1,42 @@
 #!/usr/bin/env bash
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+TOBI_DIR=$(realpath "${SCRIPT_DIR}/../..")
 
-
-if [ $# -lt 2 ]; then
-  echo 1>&2 "$0: not enough arguments"
-  echo 1>&2 "Usage: launch path_to_joblog_json command [precmd] [postcmd] Y_if_run_in_spawned_job"
-  exit 2
-elif [ $# -gt 9 ]; then
-  echo 1>&2 "$0: too many arguments"
-  echo 1>&2 "Usage: launch path_to_joblog_json command [precmd] [postcmd] Y_if_run_in_spawned_job"
-  exit 2
+is_mnucmd=false
+if [[ "$*" == *"--mnucmd"* ]]; then
+  is_mnucmd=true
 fi
 
-joblog_json=$1
-cmd=$2
-precmd=$3
-postcmd=$4
-object=$5
-source=$6
-output=$7
-spawned_job=$8
-text_command=$9
+if [ "$is_mnucmd" = false ]; then
+  if [ $# -lt 2 ]; then
+    echo 1>&2 "$0: not enough arguments"
+    echo 1>&2 "Usage: launch path_to_joblog_json command [precmd] [postcmd] Y_if_run_in_spawned_job"
+    exit 2
+  elif [ $# -gt 9 ]; then
+    echo 1>&2 "$0: too many arguments"
+    echo 1>&2 "Usage: launch path_to_joblog_json command [precmd] [postcmd] Y_if_run_in_spawned_job"
+    exit 2
+  fi
+  
+  joblog_json=$1
+  cmd=$2
+  precmd=$3
+  postcmd=$4
+  object=$5
+  source=$6
+  output=$7
+  spawned_job=$8
+  text_command=$9
+  
+  if [ ! -f "$joblog_json" ]; then
+    echo "[]" >"$joblog_json"
+  fi
 
-if [ ! -f "$joblog_json" ]; then
-  echo "[]" >"$joblog_json"
+  tmppipe=$(mktemp)
+  exitCode=0
+  echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+
 fi
-
-tmppipe=$(mktemp)
-exitCode=0
-echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
 IFS=$'\\n'
 echo "$IBMiEnvCmd"
@@ -59,43 +67,67 @@ if [ ! -z "$tmpCurlib" ]; then
   liblist -c "$tmpCurlib"
 fi
 
-cl "CHGJOB LOG(4 00 *SECLVL)"
-echo ">> executing command: ${cmd}"
-echo ">> liblist: $(liblist | awk '{print $1}' | sed ':a;N;$!ba;s/\n/ /g')"
-timestamp=$(date +"%Y-%m-%d-%H.%M.%S.00")
-echo ">> executing time: ${timestamp}"
-echo
-if [ -n $spawned_job ]; then
-  cl_parms="-S"
-fi
 
-if [ -n "$precmd" ]; then
-  echo ">> precmd: ${precmd}"
-  cl $cl_parms "$precmd"
-fi
-cl $cl_parms "$cmd" 
-exitCode=$?
-if [ -n "$text_command" ]; then
-  cl "$text_command" 
-fi
-if [ -n "$postcmd" ]; then
-  echo ">> postcmd: ${postcmd}"
-  cl $cl_parms "$postcmd"
-fi
-
-if [ $exitCode -eq 0 ]; then
-  failed=False;
+if [ "$is_mnucmd" = true ]; then
+  # MNUCMD mode: Extract arguments and call Python script
+  mnucmd_args=()
+  for arg in "$@"; do
+    if [[ "$arg" != "--mnucmd" ]]; then
+      mnucmd_args+=("$arg")
+    fi
+  done
+  
+  echo ">> Calling mnucmd_to_msgf.py with args: ${mnucmd_args[@]}"
+  
+  # Call the Python script
+  PYTHONPATH="${TOBI_DIR}/src":${PYTHONPATH} /QOpenSys/pkgs/bin/python3.9 "${TOBI_DIR}/src/makei/mnucmd_to_msgf.py" "${mnucmd_args[@]}"
+  exitCode=$?
+  exit $exitCode
+  
 else
-  failed=True;
-fi
-
-if [ -z $spawned_job ]; then
-  # Append to the passed in joblog.json file, will not work with spawned jobs
-  echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+  # Normal mode: Execute CL commands
+  cl "CHGJOB LOG(4 00 *SECLVL)"
+  echo ">> executing command: ${cmd}"
+  echo ">> liblist: $(liblist | awk '{print $1}' | sed ':a;N;$!ba;s/\n/ /g')"
+  timestamp=$(date +"%Y-%m-%d-%H.%M.%S.00")
+  echo ">> executing time: ${timestamp}"
   echo
-  getjobid -s >"$tmppipe"
-  jobid=$(cat <"$tmppipe")
-  rm -rf "$tmppipe"
-  "$SCRIPT_DIR"/getJobLog "$cmd" "$timestamp" "$jobid" "$object" "$source" "$output" "$failed" -f "$joblog_json"
+  
+  if [ -n $spawned_job ]; then
+    cl_parms="-S"
+  fi
+  
+  if [ -n "$precmd" ]; then
+    echo ">> precmd: ${precmd}"
+    cl $cl_parms "$precmd"
+  fi
+  
+  cl $cl_parms "$cmd" 
+  exitCode=$?
+  
+  if [ -n "$text_command" ]; then
+    cl "$text_command" 
+  fi
+  
+  if [ -n "$postcmd" ]; then
+    echo ">> postcmd: ${postcmd}"
+    cl $cl_parms "$postcmd"
+  fi
+  
+  if [ $exitCode -eq 0 ]; then
+    failed=False;
+  else
+    failed=True;
+  fi
+  
+  if [ -z $spawned_job ]; then
+    # Append to the passed in joblog.json file, will not work with spawned jobs
+    echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    echo
+    getjobid -s >"$tmppipe"
+    jobid=$(cat <"$tmppipe")
+    rm -rf "$tmppipe"
+    "$SCRIPT_DIR"/getJobLog "$cmd" "$timestamp" "$jobid" "$object" "$source" "$output" "$failed" -f "$joblog_json"
+  fi
+  exit $exitCode
 fi
-exit $exitCode

@@ -237,6 +237,10 @@ def extract_subdirs_from_rules_mk(rules_mk_path):
 def parse_rules_mk_for_targets(rules_mk_path, filename_upper, show_location=False, first_only=False):
     """Parse Rules.mk file and return targets matching the given filename."""
     build_targets = []
+    # Split filename into stem + ext for wildcard matching
+    filename_parts = filename_upper.rsplit(".", 1)
+    filename_ext = filename_parts[1] if len(filename_parts) == 2 else ""
+    filename_stem = filename_parts[0]
     with rules_mk_path.open("r") as f:
         for raw_line in f:
             line = raw_line.strip()
@@ -244,11 +248,20 @@ def parse_rules_mk_for_targets(rules_mk_path, filename_upper, show_location=Fals
                 continue  # skip blank lines, comments, or malformed lines
             target, deps = map(str.strip, line.split(":", 1))
             dep_list = [dep.upper().replace(r'\#', '#') for dep in deps.split()]
+            resolved_target = None
             if filename_upper in dep_list:
-                escaped_target = escape_special_chars(target)
-                build_targets.append(escaped_target)
+                resolved_target = escape_special_chars(target)
+            # Wildcard match: e.g. "%.MODULE: %.rpgle" matches "hello.rpgle"
+            elif filename_ext:
+                for dep in dep_list:
+                    if dep.startswith("%.") and dep[2:] == filename_ext:
+                        # Resolve wildcard target: "%.MODULE" -> "HELLO.MODULE"
+                        resolved_target = (filename_stem + "." + target[2:]) if target.startswith("%.") else target
+                        break
+            if resolved_target is not None:
+                build_targets.append(resolved_target)
                 if show_location:
-                    print(colored(f"Found target '{target}' in {rules_mk_path}", Colors.OKGREEN))
+                    print(colored(f"Found target '{resolved_target}' in {rules_mk_path}", Colors.OKGREEN))
                 if first_only:
                     break  # Stop after finding the first matching target
     return build_targets

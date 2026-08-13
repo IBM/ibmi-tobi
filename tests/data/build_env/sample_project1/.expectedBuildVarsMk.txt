@@ -11,7 +11,7 @@ iasp :=
 IBMiEnvCmd := CALL accounting/SETUP\nCALL devtools/INIT
 COLOR_TTY := false
 
-OBJECT_TARGET_PATTERNS := %.BNDDIR %.CMD %.DTAARA %.DTAQ %.FILE %.MENU %.MODULE %.MSGF %.PGM %.PNLGRP %.QMQRY %.SRVPGM %.TRG %.WSCST
+OBJECT_TARGET_PATTERNS := %.BNDDIR %.CMD %.DTAARA %.DTAQ %.FILE %.MENU %.MODULE %.MSGF %.PGM %.PNLGRP %.QMQRY %.SRVPGM %.TRG %.TXT %.WSCST
 
 TGTCCSID_/Users/person/projects/repos/ibmi-tobi/tests/data/build_env/sample_project1 := *JOB
 OBJPATH_/Users/person/projects/repos/ibmi-tobi/tests/data/build_env/sample_project1 := /QSYS.LIB/OBJLIB.LIB

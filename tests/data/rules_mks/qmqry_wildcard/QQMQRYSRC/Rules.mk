@@ -1,0 +1,2 @@
+%.QMQRY: %.qmqry
+	system "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"

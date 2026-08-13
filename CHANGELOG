@@ -1,4 +1,8 @@
 - Added support to source and target objects with # and $ symbol
+- Fixed false failures for *FILE targets during parallel make -j builds
+- Added support for .TXT files
+- Added support for Wildcards with custom commands in `Rules.mk`
+- Added support to create MENU using DSPF and MSGF objects
 * Fri May 08 2026 Het Patel <het.patel@ibm.com> - 3.3.0
 - Expanded OPM RPG, COBOL, SQLRPG support with dependency/include files tracking.
 - Added SQLRPG recipe for optimized compilation with embedded SQL queries.

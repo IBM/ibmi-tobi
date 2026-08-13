@@ -44,6 +44,7 @@ def test_wildcard_recipes_variables():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.containing_dir == test_dir
     assert rules_mk.subdirs == []
@@ -182,6 +183,7 @@ def test_from_file():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     variables1 = [
         "private DFTACTGRP = *NO",
@@ -260,6 +262,7 @@ def test_custom_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     commands0 = [
         "@$(call echo_cmd,=== Creating [CRTSBSD.FILE] from custom recipe)",
@@ -319,6 +322,7 @@ def test_dtaara_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
 
     assert rules_mk.src_obj_mapping["LASTORDNO.DTAARA"] == ["LASTORDNO.DTAARA"]
@@ -370,6 +374,7 @@ def test_dtaq_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
 
     assert rules_mk.src_obj_mapping["ORDERS.DTAQ"] == ["ORDERS.DTAQ"]
@@ -421,6 +426,7 @@ def test_pfsql_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
 
     assert rules_mk.containing_dir == data_dir
@@ -476,6 +482,7 @@ def test_dds_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.src_obj_mapping["ARTICLE.PF"] == ["ARTICLE.FILE"]
     assert rules_mk.src_obj_mapping["ART301D.DSPF"] == ["ART301D.FILE"]
@@ -570,6 +577,7 @@ def test_src_obj_mapping():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.src_obj_mapping["LONGSOURCEFILENAME.RPGLE"] == ["OBSCURE.MODULE"]
     assert rules_mk.src_obj_mapping["HELLO.RPGLE"] == ["HELLO.PGM", "HELLO.MODULE"]
@@ -646,6 +654,7 @@ def test_src_obj_mapping_from_root_folder():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.src_obj_mapping["HELLOP.RPGLE"] == ["HELLO.MODULE"]
     assert rules_mk.containing_dir == test_dir
@@ -694,6 +703,7 @@ def test_src_obj_mapping_from_subfolder():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.src_obj_mapping["TEST.SQLRPGLE"] == ["TESTX.MODULE"]
     assert rules_mk.containing_dir == test_dir
@@ -740,6 +750,7 @@ def test_src_obj_mapping_from_subfolder1():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.src_obj_mapping["TEST.SQLRPGLE"] == ["TEST2.PGM"]
     assert rules_mk.containing_dir == test_dir
@@ -788,6 +799,7 @@ def test_pgm_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.containing_dir == data_dir
     assert rules_mk.subdirs == []
@@ -887,6 +899,7 @@ def test_relativepath_subfolder1():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     # assert rules_mk.src_obj_mapping['HELLO.RPGLE'] == ['HELLO.PGM']
     assert rules_mk.containing_dir == test_dir
@@ -934,6 +947,7 @@ def test_relativepath_subfolder2():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.containing_dir == test_dir
     assert rules_mk.subdirs == ["QRPGLESRC"]
@@ -972,6 +986,7 @@ def test_relativepath_subfolder3():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     # assert rules_mk.src_obj_mapping['HELLO.RPGLE'] == ['HELLO.PGM']
     assert rules_mk.containing_dir == test_dir
@@ -1019,6 +1034,7 @@ def test_relativepath_rules():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.containing_dir == test_dir
     assert rules_mk.subdirs == [
@@ -1058,6 +1074,7 @@ def test_sql_recipe():
         "QMQRYs": ["VALUSE.QMQRY"],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.containing_dir == data_dir
     assert rules_mk.targets == expected_targets
@@ -1123,6 +1140,7 @@ def test_trg_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.src_obj_mapping["ORD700A.SYSTRG"] == ["ORD700A.TRG"]
     assert rules_mk.src_obj_mapping["MYPF1.PF"] == ["MYPF1.FILE"]
@@ -1214,6 +1232,7 @@ def test_opmrpg_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.src_obj_mapping["MAINPGM.RPG"] == ["MAINPGM.PGM"]
     assert rules_mk.src_obj_mapping["CPY02.RPG"] == ["CPY02.PGM"]
@@ -1289,6 +1308,7 @@ def test_opmsqlrpg_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.src_obj_mapping["MAINPGM22.SQLRPG"] == ["MAINPGM22.PGM"]
     assert rules_mk.containing_dir == data_dir
@@ -1345,6 +1365,7 @@ def test_cbl_recipe():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": [],
     }
     assert rules_mk.src_obj_mapping["SIMPLE.CBL"] == ["SIMPLE.PGM"]
     assert rules_mk.containing_dir == data_dir
@@ -1379,6 +1400,225 @@ SIMPLE.PGM_RECIPE=CBL_TO_PGM_RECIPE
     )
 
 
+def test_txt_custom():
+    # Test loading from a valid file
+    rules_mk = RulesMk.from_file(data_dir / "txt.rules.mk", data_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": [],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": [],
+        "SRVPGMs": [],
+        "PGMs": [],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": [],
+        "WSCSTs": [],
+        "MSGs": [],
+        "TXTs": ["SAMPLE1.TXT"],
+    }
+    commands0 = [
+        "@$(call echo_cmd,=== Creating [SAMPLE1.TXT] from custom recipe)",
+        'system -s "CPYFRMSTMF FROMSTMF(\'$(SRCPATH)/sample1.txt\') TOMBR(\'/QSYS.LIB/'
+        '$(BUILDLIB).LIB/QTXTSRC.FILE/SAMPLE1.MBR\')"',
+        'system -s "CHGPFM FILE($(BUILDLIB)/QTXTSRC) MBR(SAMPLE1) SRCTYPE(TXT) TEXT(\'SP for SAMPLE1\')"',
+        'system -s "RUNSQLSTM SRCFILE($(BUILDLIB)/QTXTSRC) SRCMBR(SAMPLE1) COMMIT(*NONE) NAMING(*SYS)"',
+        "@$(call echo_success_cmd,End of creating SAMPLE1.TXT!)",
+    ]
+    assert rules_mk.containing_dir == data_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+    assert rules_mk.rules[0].variables == []
+    assert rules_mk.rules[0].commands == commands0
+    assert rules_mk.rules[0].dependencies == ["sample1.txt"]
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == "SAMPLE1.TXT"
+    assert rules_mk.rules[0].source_file is None
+    assert rules_mk.build_context is None
+    assert (
+        str(rules_mk.rules[0])
+        == """SAMPLE1.TXT_CUSTOM_RECIPE=true
+SAMPLE1.TXT : sample1.txt
+\t@$(call echo_cmd,=== Creating [SAMPLE1.TXT] from custom recipe)
+\tsystem -s "CPYFRMSTMF FROMSTMF('$(SRCPATH)/sample1.txt') TOMBR('/QSYS.LIB/$(BUILDLIB).LIB/QTXTSRC.FILE/SAMPLE1.MBR')"
+\tsystem -s "CHGPFM FILE($(BUILDLIB)/QTXTSRC) MBR(SAMPLE1) SRCTYPE(TXT) TEXT('SP for SAMPLE1')"
+\tsystem -s "RUNSQLSTM SRCFILE($(BUILDLIB)/QTXTSRC) SRCMBR(SAMPLE1) COMMIT(*NONE) NAMING(*SYS)"
+\t@$(call echo_success_cmd,End of creating SAMPLE1.TXT!)
+"""
+    )
+    assert (
+        str(rules_mk)
+        == """TXTs := SAMPLE1.TXT
+
+
+SAMPLE1.TXT_CUSTOM_RECIPE=true
+SAMPLE1.TXT : sample1.txt
+\t@$(call echo_cmd,=== Creating [SAMPLE1.TXT] from custom recipe)
+\tsystem -s "CPYFRMSTMF FROMSTMF('$(SRCPATH)/sample1.txt') TOMBR('/QSYS.LIB/$(BUILDLIB).LIB/QTXTSRC.FILE/SAMPLE1.MBR')"
+\tsystem -s "CHGPFM FILE($(BUILDLIB)/QTXTSRC) MBR(SAMPLE1) SRCTYPE(TXT) TEXT('SP for SAMPLE1')"
+\tsystem -s "RUNSQLSTM SRCFILE($(BUILDLIB)/QTXTSRC) SRCMBR(SAMPLE1) COMMIT(*NONE) NAMING(*SYS)"
+\t@$(call echo_success_cmd,End of creating SAMPLE1.TXT!)
+"""
+    )
+
+
+def test_menu_recipe():
+    # Test loading from a valid file
+    rules_mk = RulesMk.from_file(data_dir / "menu.rules.mk", data_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": ["FOOP.MENU"],
+        "LFs": [],
+        "DSPFs": ["FOO.FILE"],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": [],
+        "SRVPGMs": [],
+        "PGMs": [],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": [],
+        "WSCSTs": [],
+        "MSGs": ["FOO1.MSGF"],
+        "TXTs": []
+    }
+    assert rules_mk.src_obj_mapping["FOO.MNUDDS"] == ["FOO.FILE"]
+    assert rules_mk.src_obj_mapping["FOOQQ.MNUCMD"] == ["FOO1.MSGF"]
+    assert rules_mk.containing_dir == data_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    assert rules_mk.rules[0].variables == []
+    assert rules_mk.rules[0].commands == []
+    assert rules_mk.rules[0].dependencies == []
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == "FOO.FILE"
+    assert rules_mk.rules[0].source_file == "foo.mnudds"
+    assert (
+        str(rules_mk.rules[0])
+        == """FOO.FILE_SRC=foo.mnudds
+FOO.FILE_DEP=
+FOO.FILE_RECIPE=DSPF_TO_FILE_RECIPE
+"""
+    )
+
+    assert rules_mk.rules[1].variables == []
+    assert rules_mk.rules[1].commands == []
+    assert rules_mk.rules[1].dependencies == []
+    assert rules_mk.rules[1].include_dirs == []
+    assert rules_mk.rules[1].target == "FOO1.MSGF"
+    assert rules_mk.rules[1].source_file == "fooqq.mnucmd"
+    assert (
+        str(rules_mk.rules[1])
+        == """FOO1.MSGF_SRC=fooqq.mnucmd
+FOO1.MSGF_DEP=
+FOO1.MSGF_RECIPE=MNUCMD_TO_MSGF_RECIPE
+"""
+    )
+
+    assert rules_mk.rules[2].variables == []
+    assert rules_mk.rules[2].commands == []
+    assert rules_mk.rules[2].dependencies == ["FOO1.MSGF"]
+    assert rules_mk.rules[2].include_dirs == []
+    assert rules_mk.rules[2].target == "FOOP.MENU"
+    assert rules_mk.rules[2].source_file == "FOO.FILE"
+    assert (
+        str(rules_mk.rules[2])
+        == """FOOP.MENU_SRC=FOO.FILE
+FOOP.MENU_DEP=FOO1.MSGF
+FOOP.MENU_RECIPE=FILE_MSGF_TO_MENU_RECIPE
+"""
+    )
+
+    assert (
+        str(rules_mk)
+        == """PFs := FOOP.MENU
+DSPFs := FOO.FILE
+MSGs := FOO1.MSGF
+
+
+FOO.FILE_SRC=foo.mnudds
+FOO.FILE_DEP=
+FOO.FILE_RECIPE=DSPF_TO_FILE_RECIPE
+FOO1.MSGF_SRC=fooqq.mnucmd
+FOO1.MSGF_DEP=
+FOO1.MSGF_RECIPE=MNUCMD_TO_MSGF_RECIPE
+FOOP.MENU_SRC=FOO.FILE
+FOOP.MENU_DEP=FOO1.MSGF
+FOOP.MENU_RECIPE=FILE_MSGF_TO_MENU_RECIPE
+"""
+    )
+
+
+def test_wildcardcust():
+    root_dir = data_dir / "qmqry_wildcard"
+    root_rules_mk = RulesMk.from_file(root_dir / "wildcardcust.rules.mk", root_dir)
+    assert root_rules_mk.containing_dir == root_dir
+    assert root_rules_mk.subdirs == ["QQMQRYSRC"]
+    assert root_rules_mk.rules == []
+
+    test_dir = data_dir / "qmqry_wildcard" / "QQMQRYSRC"
+    rules_mk = RulesMk.from_file(test_dir / "Rules.mk", test_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": [],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": [],
+        "SRVPGMs": [],
+        "PGMs": [],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": ["HELLOX.QMQRY"],
+        "WSCSTs": [],
+        "MSGs": [],
+        "TXTs": []
+    }
+    assert rules_mk.containing_dir == test_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    commands = [
+        "@$(call echo_cmd,=== Creating [HELLOX.QMQRY] from custom recipe)",
+        'system "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"',
+        "@$(call echo_success_cmd,End of creating HELLOX.QMQRY!)",
+    ]
+
+    assert rules_mk.rules[0].variables == []
+    assert rules_mk.rules[0].commands == commands
+    assert rules_mk.rules[0].dependencies == ["HELLOX.qmqry"]
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == "HELLOX.QMQRY"
+    assert rules_mk.rules[0].source_file is None
+
+    assert (
+        str(rules_mk)
+        == "QMQRYs := HELLOX.QMQRY\n\n\n"
+           "HELLOX.QMQRY_CUSTOM_RECIPE=true\n"
+           "HELLOX.QMQRY : $(d)/HELLOX.qmqry\n"
+           "\t@$(call echo_cmd,=== Creating [HELLOX.QMQRY] from custom recipe)\n"
+           '\tsystem "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"\n'
+           "\t@$(call echo_success_cmd,End of creating HELLOX.QMQRY!)\n"
+    )
+
+
 def test_hash():
     # Test loading from a valid file
     rules_mk = RulesMk.from_file(data_dir / "hash.rules.mk", data_dir)
@@ -1401,6 +1641,7 @@ def test_hash():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": []
     }
     assert rules_mk.src_obj_mapping["#SAMPLE.PF"] == ['\\#SAMPLE.FILE']
     assert rules_mk.src_obj_mapping["HE#LLO.RPGLE"] == ['HE\\#LLO.MODULE']
@@ -1473,6 +1714,7 @@ def test_dollar():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
+        "TXTs": []
     }
     assert rules_mk.src_obj_mapping["$SAMPLE.PF"] == ['$SAMPLE.FILE']
     assert rules_mk.src_obj_mapping["DOLLAR$.RPGLE"] == ['DOLLAR$.MODULE']

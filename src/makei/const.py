@@ -29,7 +29,8 @@ TARGET_GROUPS = ["TRG",
                  "PNLGRP",
                  "QMQRY",
                  "WSCST",
-                 "MSG"
+                 "MSG",
+                 "TXT"
                  ]
 
 FILE_TARGETGROUPS_MAPPING = {
@@ -45,9 +46,11 @@ FILE_TARGETGROUPS_MAPPING = {
     "LF": {"LF"},
     "PF": {"PF"},
     "PRTF": {"PRTF"},
+    "MNUDDS": {"DSPF"},
     "FILE": {"PF"},
     "MENUSRC": {"MENU"},
     "MENU": {"MENU"},
+    "MNUCMD": {"MSG"},
     "C": {"MODULE"},
     "CPP": {"MODULE"},
     "RPGLE": {"MODULE", "PGM"},
@@ -66,6 +69,7 @@ FILE_TARGETGROUPS_MAPPING = {
     "PNLGRPSRC": {"PNLGRP"},
     "PNLGRP": {"PNLGRP"},
     "SQL": {"QMQRY"},
+    "QMQRY": {"QMQRY"},
     "BND": {"SRVPGM"},
     "ILESRVPGM": {"SRVPGM"},
     "BNDDIR": {"BNDD"},
@@ -85,6 +89,7 @@ FILE_TARGETGROUPS_MAPPING = {
     "MSGF": {"MSG"},
     "WSCSTSRC": {"WSCST"},
     "SQLVAR": {"SRVPGM"},
+    "TXT": {"TXT"},
 }
 
 TARGET_TARGETGROUPS_MAPPING = {
@@ -102,6 +107,7 @@ TARGET_TARGETGROUPS_MAPPING = {
     "MSGF": "MSG",
     "WSCST": "WSCST",
     "TRG": "TRG",
+    "TXT": "TXT",
 }
 
 FILE_TARGET_MAPPING = {
@@ -117,8 +123,11 @@ FILE_TARGET_MAPPING = {
     "LF": {"FILE"},
     "PF": {"FILE"},
     "PRTF": {"FILE"},
+    "MNUDDS": {"FILE"},
+    "FILE": {"FILE"},
     "MENUSRC": {"MENU"},
     "MENU": {"MENU"},
+    "MNUCMD": {"MSGF"},
     "C": {"MODULE", "PGM"},
     "CPP": {"MODULE"},
     "RPGLE": {"MODULE", "PGM"},
@@ -136,7 +145,8 @@ FILE_TARGET_MAPPING = {
     "ILEPGM": {"PGM"},
     "PNLGRPSRC": {"PNLGRP"},
     "PNLGRP": {"PNLGRP"},
-    "SQL": {"QMQRY", "SRVPGM", "FILE"},
+    "SQL": {"QMQRY", "SRVPGM"},
+    "QMQRY": {"QMQRY"},
     "BND": {"SRVPGM"},
     "ILESRVPGM": {"SRVPGM"},
     "BNDDIR": {"BNDDIR"},
@@ -156,6 +166,7 @@ FILE_TARGET_MAPPING = {
     "SQLTRG": {"PGM"},
     "MSGF": {"MSGF"},
     "WSCSTSRC": {"WSCST"},
+    "TXT": {"TXT"},
 }
 # This is the maximum number of dot seperated parts in the file extensions defined above.
 FILE_MAX_EXT_LENGTH = max(

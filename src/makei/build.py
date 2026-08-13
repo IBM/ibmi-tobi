@@ -449,6 +449,8 @@ OBJECT_TARGET_PATTERNS := {target_patterns}
     def _post_make(self):
         for tmp_file in self.tmp_files:
             tmp_file.unlink(missing_ok=True)
+        lock_path = self.src_dir / ".logs" / "joblog.lock"
+        lock_path.unlink(missing_ok=True)
         print(colored("Objects:            ", Colors.BOLD), colored(f"{len(self.failed_targets)} failed", Colors.FAIL),
               colored(f"{len(self.success_targets)} succeed", Colors.OKGREEN),
               f"{len(self.success_targets) + len(self.failed_targets)} total")
