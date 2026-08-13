@@ -66,7 +66,13 @@ class MKRule:
         try:
             target_type = self.target.split(".")[-1].upper()
             source_file = decompose_filename(self.source_file)[2].upper()
-            if target_type in ("SQL", "MSGF"):
+            if source_file == "FILE" and target_type == "MENU":
+                recipe_name = "FILE_MSGF_TO_MENU_RECIPE"
+            elif target_type == "MSGF" and source_file == "MNUCMD":
+                recipe_name = "MNUCMD_TO_MSGF_RECIPE"
+            elif source_file == "MNUDDS":
+                recipe_name = "DSPF_TO_FILE_RECIPE"
+            elif target_type in ("SQL", "MSGF"):
                 recipe_name = f"{target_type}_RECIPE"
             elif target_type in ("PGM") and source_file in ("RPGLE", "SQLRPGLE"):
                 recipe_name = target_type + '.' + source_file + '_TO_' + self.target.split(".")[

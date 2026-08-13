@@ -1467,3 +1467,95 @@ SAMPLE1.TXT : sample1.txt
 \t@$(call echo_success_cmd,End of creating SAMPLE1.TXT!)
 """
     )
+
+
+def test_menu_recipe():
+    # Test loading from a valid file
+    rules_mk = RulesMk.from_file(data_dir / "menu.rules.mk", data_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": ["FOOP.MENU"],
+        "LFs": [],
+        "DSPFs": ["FOO.FILE"],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": [],
+        "SRVPGMs": [],
+        "PGMs": [],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": [],
+        "WSCSTs": [],
+        "MSGs": ["FOO1.MSGF"],
+        "TXTs": []
+    }
+    assert rules_mk.src_obj_mapping["FOO.MNUDDS"] == ["FOO.FILE"]
+    assert rules_mk.src_obj_mapping["FOOQQ.MNUCMD"] == ["FOO1.MSGF"]
+    assert rules_mk.containing_dir == data_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    assert rules_mk.rules[0].variables == []
+    assert rules_mk.rules[0].commands == []
+    assert rules_mk.rules[0].dependencies == []
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == "FOO.FILE"
+    assert rules_mk.rules[0].source_file == "foo.mnudds"
+    assert (
+        str(rules_mk.rules[0])
+        == """FOO.FILE_SRC=foo.mnudds
+FOO.FILE_DEP=
+FOO.FILE_RECIPE=DSPF_TO_FILE_RECIPE
+"""
+    )
+
+    assert rules_mk.rules[1].variables == []
+    assert rules_mk.rules[1].commands == []
+    assert rules_mk.rules[1].dependencies == []
+    assert rules_mk.rules[1].include_dirs == []
+    assert rules_mk.rules[1].target == "FOO1.MSGF"
+    assert rules_mk.rules[1].source_file == "fooqq.mnucmd"
+    assert (
+        str(rules_mk.rules[1])
+        == """FOO1.MSGF_SRC=fooqq.mnucmd
+FOO1.MSGF_DEP=
+FOO1.MSGF_RECIPE=MNUCMD_TO_MSGF_RECIPE
+"""
+    )
+
+    assert rules_mk.rules[2].variables == []
+    assert rules_mk.rules[2].commands == []
+    assert rules_mk.rules[2].dependencies == ["FOO1.MSGF"]
+    assert rules_mk.rules[2].include_dirs == []
+    assert rules_mk.rules[2].target == "FOOP.MENU"
+    assert rules_mk.rules[2].source_file == "FOO.FILE"
+    assert (
+        str(rules_mk.rules[2])
+        == """FOOP.MENU_SRC=FOO.FILE
+FOOP.MENU_DEP=FOO1.MSGF
+FOOP.MENU_RECIPE=FILE_MSGF_TO_MENU_RECIPE
+"""
+    )
+
+    assert (
+        str(rules_mk)
+        == """PFs := FOOP.MENU
+DSPFs := FOO.FILE
+MSGs := FOO1.MSGF
+
+
+FOO.FILE_SRC=foo.mnudds
+FOO.FILE_DEP=
+FOO.FILE_RECIPE=DSPF_TO_FILE_RECIPE
+FOO1.MSGF_SRC=fooqq.mnucmd
+FOO1.MSGF_DEP=
+FOO1.MSGF_RECIPE=MNUCMD_TO_MSGF_RECIPE
+FOOP.MENU_SRC=FOO.FILE
+FOOP.MENU_DEP=FOO1.MSGF
+FOOP.MENU_RECIPE=FILE_MSGF_TO_MENU_RECIPE
+"""
+    )
