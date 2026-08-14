@@ -10,7 +10,7 @@ from makei import __version__
 from makei import init_project
 from makei.build import BuildEnv
 from makei.cvtsrcpf import CvtSrcPf
-from makei.utils import Colors, colored
+from makei.utils import Colors, colored, escape_special_chars
 from pathlib import Path
 from makei.iproj_json import IProjJson
 
@@ -247,10 +247,10 @@ def parse_rules_mk_for_targets(rules_mk_path, filename_upper, show_location=Fals
             if not line or line.startswith("#") or ":" not in line:
                 continue  # skip blank lines, comments, or malformed lines
             target, deps = map(str.strip, line.split(":", 1))
-            dep_list = [dep.upper() for dep in deps.split()]
+            dep_list = [dep.upper().replace(r'\#', '#') for dep in deps.split()]
             resolved_target = None
             if filename_upper in dep_list:
-                resolved_target = target
+                resolved_target = escape_special_chars(target)
             # Wildcard match: e.g. "%.MODULE: %.rpgle" matches "hello.rpgle"
             elif filename_ext:
                 for dep in dep_list:
@@ -344,7 +344,8 @@ def handle_compile(args):
             # Pass each file individually to read_and_filter_rules_mk
             targets_from_rule = read_and_filter_rules_mk([name])
             targets.extend([t.upper() for t in targets_from_rule])
-    print(colored("targets: " + ', '.join(targets), Colors.OKBLUE))
+    targets1 = ([BuildEnv._unescape_special_chars(t.upper()) for t in targets])
+    print(colored("targets: " + ', '.join(targets1), Colors.OKBLUE))
     build_env = BuildEnv(targets, args.make_options, get_override_vars(args), trace=args.log)
     if args.log:
         build_env.dump_resolved_makefile()

@@ -33,6 +33,12 @@ def get_target_patterns_for_makefile() -> str:
     return ' '.join(f'%.{target_type}' for target_type in sorted(TARGET_TARGETGROUPS_MAPPING.keys()))
 
 
+def escape_special_chars(text: str) -> str:
+    """Escape # and $ """
+    escaped = text.replace(r'\#', 'HASHESCAPE_').replace(r'$', 'DOLLARESCAPE_')
+    return escaped
+
+
 def colored(message: str, color: Colors) -> str:
     """Returns a colored message if supported
     """

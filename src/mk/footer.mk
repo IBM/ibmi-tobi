@@ -4,9 +4,20 @@ SUBDIRS_$(d) := $(patsubst %/,%,$(addprefix $(d)/,$(SUBDIRS)))
 
 CLEAN_$(d) := $(CLEAN_$(d)) $(filter /%,$(CLEAN) $(TARGETS)) $(addprefix $(d)/,$(filter-out /%,$(CLEAN)))
 
+# Replacing DOLLARESCAPE_ with '$$$$$$$' ensures '$' survives multiple make expansion passes, eventually produces a literal '$' when it reaches recipe 
+# Similarly Replacing HASHESCAPE_ with '\#'  
+define escape_specials
+$(subst DOLLARESCAPE_,$$$$$$$,$(subst HASHESCAPE_,\#,$(1)))
+endef
+
+# Escape specials for source and dependency, but preserve HASHESCAPE_ and DOLLARESCAPE_ for object dependencies
+define escape_source
+$(if $(filter $(d)/%,$(1)),$(call escape_specials,$(1)),$(1))
+endef
+
 ifdef TARGETS
 TARGETS_$(d) := $(TARGETS)
-$(foreach tgt,$(TARGETS),$(eval vpath $(tgt) $(OBJPATH_$(d)))$(eval $(tgt)_d = $(d))$(eval $(call generate_rule,$(tgt),${$(tgt)_SRC},${$(tgt)_DEP},${$(tgt)_RECIPE})))
+$(foreach tgt,$(TARGETS),$(eval vpath $(tgt) $(OBJPATH_$(d)))$(eval $(tgt)_d = $(d))$(eval $(call generate_rule,$(tgt),$(call escape_source,$($(tgt)_SRC)),$(foreach dep,$($(tgt)_DEP),$(call escape_source,$(dep))),$($(tgt)_RECIPE))))
 endif
 
 

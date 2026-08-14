@@ -1,3 +1,4 @@
+- Added support to source and target objects with # and $ symbol
 - Fixed false failures for *FILE targets during parallel make -j builds
 - Added support for .TXT files
 - Added support for Wildcards with custom commands in `Rules.mk`

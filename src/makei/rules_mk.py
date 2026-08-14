@@ -9,7 +9,8 @@ from typing import Callable, Dict, List, Optional, TYPE_CHECKING
 
 from makei.const import (FILE_TARGETGROUPS_MAPPING, TARGET_GROUPS, TARGET_TARGETGROUPS_MAPPING, MEMBER_TEXT_LINES,
                          METADATA_HEADER, TEXT_HEADER)
-from makei.utils import decompose_filename, is_source_file, check_keyword_in_file, get_line, get_style_dict
+from makei.utils import (decompose_filename, is_source_file, check_keyword_in_file, get_line, get_style_dict,
+                         escape_special_chars)
 
 if TYPE_CHECKING:
     from makei.build import BuildEnv
@@ -41,15 +42,19 @@ class MKRule:
 
         if len(self.commands) == 0:
             for dependency in self.dependencies:
-                if is_source_file(dependency) and decompose_filename(dependency)[-1] == "":
-                    if (self.containing_dir / dependency).exists():
+                dependency_esc = dependency.replace(r'\#', '#')
+                if is_source_file(dependency_esc) and decompose_filename(dependency_esc)[-1] == "":
+                    if (self.containing_dir / dependency_esc).exists():
                         self.is_source_file = True
-                        self.source_file = '$(d)/' + dependency
+                        self.source_file = '$(d)/' + dependency_esc
                         self.dependencies.remove(dependency)
                         return
             try:
-                self.source_file = self.dependencies[0]
-                self.dependencies.remove(self.source_file)
+                dep = self.dependencies[0]
+                # Use object types from TARGET_TARGETGROUPS_MAPPING to determine if dependency is an object
+                self.source_file = dep.replace(r'\#', 'HASHESCAPE_' if dep.upper().split('.')[-1] in
+                                               TARGET_TARGETGROUPS_MAPPING else '#')
+                self.dependencies.remove(self.dependencies[0])
             except IndexError:
                 print(f"No source file found for {self.target} in {self.dependencies}")
         else:
@@ -57,10 +62,28 @@ class MKRule:
             self.commands.append(f"@$(call echo_success_cmd,End of creating {self.target}!)")
 
     def __str__(self):
-        variable_assignment = ''.join(f"{self.target}: {variable}\n" for variable in self.variables)
+        # ESCAPE targets that contain $ and #
+        escaped_target = escape_special_chars(self.target)
+
+        # ESCAPE $ and # in variable values so Make does not expand them
+        def escape_variable_value(variable: str) -> str:
+            if '=' not in variable:
+                return variable
+            sep_idx = variable.index('=')
+            lhs = variable[:sep_idx + 1]
+            rhs = variable[sep_idx + 1:]
+            rhs = rhs.replace('$', 'DOLLARESCAPE_')
+            return lhs + rhs
+        variable_assignment = ''.join(
+            f"{escaped_target}: {escape_variable_value(variable)}\n" for variable in self.variables)
+        # ESCAPE dependencies that contain $ and #
+        escaped_deps = [
+            escape_special_chars(dep)
+            for dep in self.dependencies
+        ]
         if len(self.commands) > 0:
-            return f"{self.target}_CUSTOM_RECIPE=true" + '\n' + f"{self.target} : " \
-                                                                f"{' '.join(self._parse_dependencies())}" + '\n' + \
+            return f"{escaped_target}_CUSTOM_RECIPE=true" + '\n' + f"{escaped_target} : " \
+                                                                   f"{' '.join(self._parse_dependencies())}" + '\n' + \
                 ''.join(
                     ['\t' + cmd + '\n' for cmd in self.commands]) + variable_assignment
         try:
@@ -83,9 +106,13 @@ class MKRule:
             else:
                 recipe_name = decompose_filename(self.source_file)[2].upper() + '_TO_' + self.target.split(".")[
                     -1].upper() + '_RECIPE'
-            return f"{self.target}_SRC={self.source_file}" + '\n' + f"{self.target}_DEP" \
-                                                                    f"={' '.join(self.dependencies)}" + '\n' + \
-                f"{self.target}_RECIPE={recipe_name}" + '\n' + variable_assignment
+            if '#' in self.source_file:
+                self.source_file = self.source_file.replace('#', 'HASHESCAPE_')
+            if '$' in self.source_file:
+                self.source_file = re.sub(r'\$(?!\(d\))', 'DOLLARESCAPE_', self.source_file)
+            return f"{escaped_target}_SRC={self.source_file}" + '\n' + f"{escaped_target}_DEP" \
+                                                                       f"={' '.join(escaped_deps)}" + '\n' + \
+                f"{escaped_target}_RECIPE={recipe_name}" + '\n' + variable_assignment
         except AttributeError:
             print(f"No source file found for {self.target}")
             sys.exit(1)
@@ -97,6 +124,9 @@ class MKRule:
         """Parses the dependencies of a rule"""
         result = []
         for dependency in self.dependencies:
+            # Handle escaped '#'
+            if dependency.startswith(r'\#'):
+                dependency = dependency[1:]
             if is_source_file(dependency) and decompose_filename(dependency)[-1] == "":
                 if (self.containing_dir / dependency).exists():
                     result.append('$(d)/' + dependency)
@@ -211,7 +241,7 @@ class RulesMk:
             include_dirs = []
         with rules_mk_path.open("r") as f:
             rules_mk_str = f.read()
-        rules_mk = RulesMk.from_str(rules_mk_str, rules_mk_path.parent, src_dir, include_dirs)
+        rules_mk = RulesMk.from_str(rules_mk_str, rules_mk_path.parent, Path(src_dir), include_dirs)
         return rules_mk
 
     @classmethod
@@ -368,7 +398,9 @@ class RulesMk:
                 filename_split = filename.split('.', 1)
 
                 if filename_split[-1].lower() == source_ext:
-                    target_object = (filename_split[0] + "." + target_ext).upper()
+                    from makei.build import BuildEnv
+                    target_object = (BuildEnv._escape_special_chars_internal(filename_split[0])
+                                     + "." + target_ext).upper()
                     if target_object not in targets:
                         if wildcard_commands:
                             source_name = filename_split[0] + "." + source_ext
@@ -445,7 +477,9 @@ class RulesMk:
 
         for target_group, targets in self.targets.items():
             if len(targets) > 0:
-                rules_str += f"{target_group} := {' '.join(targets)}\n"
+                # ESCAPE targets that contain $ and #
+                escaped_targets = [escape_special_chars(t) for t in targets]
+                rules_str += f"{target_group} := {' '.join(escaped_targets)}\n"
         rules_str += "\n\n"
         rules_str += ''.join(map(str, map(rules_middleware, self.rules)))
         return rules_str

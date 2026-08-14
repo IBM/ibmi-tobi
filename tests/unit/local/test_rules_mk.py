@@ -1617,3 +1617,149 @@ def test_wildcardcust():
            '\tsystem "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"\n'
            "\t@$(call echo_success_cmd,End of creating HELLOX.QMQRY!)\n"
     )
+
+
+def test_hash():
+    # Test loading from a valid file
+    rules_mk = RulesMk.from_file(data_dir / "hash.rules.mk", data_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": ['\\#SAMPLE.FILE'],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": ['HE\\#LLO.MODULE'],
+        "SRVPGMs": [],
+        "PGMs": [],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": [],
+        "WSCSTs": [],
+        "MSGs": [],
+        "TXTs": []
+    }
+    assert rules_mk.src_obj_mapping["#SAMPLE.PF"] == ['\\#SAMPLE.FILE']
+    assert rules_mk.src_obj_mapping["HE#LLO.RPGLE"] == ['HE\\#LLO.MODULE']
+    assert rules_mk.containing_dir == data_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    # Test #SAMPLE.FILE rule
+    assert rules_mk.rules[0].variables == []
+    assert rules_mk.rules[0].commands == []
+    assert rules_mk.rules[0].dependencies == []
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == r"\#SAMPLE.FILE"
+    assert rules_mk.rules[0].source_file == "#sample.pf"
+    assert (
+        str(rules_mk.rules[0])
+        == """HASHESCAPE_SAMPLE.FILE_SRC=HASHESCAPE_sample.pf
+HASHESCAPE_SAMPLE.FILE_DEP=
+HASHESCAPE_SAMPLE.FILE_RECIPE=PF_TO_FILE_RECIPE
+""")
+    # Test HELLO#.MODULE rule
+    assert rules_mk.rules[1].variables == []
+    assert rules_mk.rules[1].commands == []
+    assert rules_mk.rules[1].dependencies == []
+    assert rules_mk.rules[1].include_dirs == []
+    assert rules_mk.rules[1].target == r"HE\#LLO.MODULE"
+    assert rules_mk.rules[1].source_file == "he#llo.rpgle"
+    assert (
+        str(rules_mk.rules[1])
+        == """HEHASHESCAPE_LLO.MODULE_SRC=heHASHESCAPE_llo.rpgle
+HEHASHESCAPE_LLO.MODULE_DEP=
+HEHASHESCAPE_LLO.MODULE_RECIPE=RPGLE_TO_MODULE_RECIPE
+""")
+
+    # Test full RulesMk string output
+    assert (
+        str(rules_mk)
+        == """PFs := HASHESCAPE_SAMPLE.FILE
+MODULEs := HEHASHESCAPE_LLO.MODULE
+
+
+HASHESCAPE_SAMPLE.FILE_SRC=HASHESCAPE_sample.pf
+HASHESCAPE_SAMPLE.FILE_DEP=
+HASHESCAPE_SAMPLE.FILE_RECIPE=PF_TO_FILE_RECIPE
+HEHASHESCAPE_LLO.MODULE_SRC=heHASHESCAPE_llo.rpgle
+HEHASHESCAPE_LLO.MODULE_DEP=
+HEHASHESCAPE_LLO.MODULE_RECIPE=RPGLE_TO_MODULE_RECIPE
+""")
+
+
+def test_dollar():
+    # Test loading from a valid file
+    rules_mk = RulesMk.from_file(data_dir / "dollar.rules.mk", data_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": ['$SAMPLE.FILE'],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": ['DOLLAR$.MODULE'],
+        "SRVPGMs": [],
+        "PGMs": [],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": [],
+        "WSCSTs": [],
+        "MSGs": [],
+        "TXTs": []
+    }
+    assert rules_mk.src_obj_mapping["$SAMPLE.PF"] == ['$SAMPLE.FILE']
+    assert rules_mk.src_obj_mapping["DOLLAR$.RPGLE"] == ['DOLLAR$.MODULE']
+    assert rules_mk.containing_dir == data_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    # Test #SAMPLE.FILE rule
+    assert rules_mk.rules[0].variables == []
+    assert rules_mk.rules[0].commands == []
+    assert rules_mk.rules[0].dependencies == []
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == r"$SAMPLE.FILE"
+    assert rules_mk.rules[0].source_file == "$sample.pf"
+    assert (
+        str(rules_mk.rules[0])
+        == """DOLLARESCAPE_SAMPLE.FILE_SRC=DOLLARESCAPE_sample.pf
+DOLLARESCAPE_SAMPLE.FILE_DEP=
+DOLLARESCAPE_SAMPLE.FILE_RECIPE=PF_TO_FILE_RECIPE
+""")
+    # Test HELLO#.MODULE rule
+    assert rules_mk.rules[1].variables == []
+    assert rules_mk.rules[1].commands == []
+    assert rules_mk.rules[1].dependencies == []
+    assert rules_mk.rules[1].include_dirs == []
+    assert rules_mk.rules[1].target == r"DOLLAR$.MODULE"
+    assert rules_mk.rules[1].source_file == "dollar$.rpgle"
+    assert (
+        str(rules_mk.rules[1])
+        == """DOLLARDOLLARESCAPE_.MODULE_SRC=dollarDOLLARESCAPE_.rpgle
+DOLLARDOLLARESCAPE_.MODULE_DEP=
+DOLLARDOLLARESCAPE_.MODULE_RECIPE=RPGLE_TO_MODULE_RECIPE
+""")
+
+    # Test full RulesMk string output
+    assert (
+        str(rules_mk)
+        == """PFs := DOLLARESCAPE_SAMPLE.FILE
+MODULEs := DOLLARDOLLARESCAPE_.MODULE
+
+
+DOLLARESCAPE_SAMPLE.FILE_SRC=DOLLARESCAPE_sample.pf
+DOLLARESCAPE_SAMPLE.FILE_DEP=
+DOLLARESCAPE_SAMPLE.FILE_RECIPE=PF_TO_FILE_RECIPE
+DOLLARDOLLARESCAPE_.MODULE_SRC=dollarDOLLARESCAPE_.rpgle
+DOLLARDOLLARESCAPE_.MODULE_DEP=
+DOLLARDOLLARESCAPE_.MODULE_RECIPE=RPGLE_TO_MODULE_RECIPE
+""")

@@ -51,10 +51,10 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 # The following logs to stdout is parsed and used by the makei program. Check makei.BuildEnv.make before making changes!
 define logSuccess =
-$(call echo_success_cmd,"$1 was created successfully!")
+$(call echo_success_cmd,"'$1' was created successfully!")
 endef
 define logFail =
-$(call echo_error_cmd,"Failed to create $1!")
+$(call echo_error_cmd,"Failed to create '$1'!")
 endef
 
 # The extractName and extractTextDescriptor are used to decompose the long filename into module name and
@@ -502,7 +502,7 @@ CRTSQLRPGIFLAGS = COMMIT($(COMMIT)) OBJTYPE($(OBJTYPE)) OPTION($(OPTION)) OUTPUT
 CRTSQLCBLIFLAGS = COMMIT($(COMMIT)) OBJTYPE($(OBJTYPE)) OPTION($(OPTION)) OUTPUT(*PRINT) TEXT('$(subst ','',$(TEXT))') \
                   TGTRLS($(TGTRLS)) DBGVIEW($(DBGVIEW)) DBGENCKEY($(DBGENCKEY)) USRPRF($(USRPRF)) CVTCCSID($(TGTCCSID)) \
                   COMPILEOPT('TGTCCSID($(TGTCCSID)) OPTIMIZE($(OPTIMIZE)) INCDIR($(doublequotedINCDIR))')
-CRTSRVPGMFLAGS = ACTGRP($(ACTGRP)) ALWUPD($(ALWUPD)) TEXT('$(subst ','',$(TEXT))') TGTRLS($(TGTRLS)) AUT($(AUT)) DETAIL($(DETAIL)) STGMDL($(STGMDL)) OPTION($(OPTION)) BNDDIR($(BNDDIR)) USRPRF($(USRPRF)) ALWRINZ($(ALWRINZ))
+CRTSRVPGMFLAGS = ACTGRP($(ACTGRP)) ALWUPD($(ALWUPD)) TEXT('$(subst ','',$(TEXT))') TGTRLS($(TGTRLS)) AUT($(AUT)) DETAIL($(DETAIL)) STGMDL($(STGMDL)) OPTION($(OPTION)) BNDDIR($(call ESCAPE_FOR_SLASH,$(call replace_DOLLARESCAPE,$(BNDDIR)))) USRPRF($(USRPRF)) ALWRINZ($(ALWRINZ))
 CRTWSCSTFLAGS = AUT($(AUT)) TEXT('$(subst ','',$(TEXT))')
 CRTBNDRPGFLAGS = TGTCCSID($(TGTCCSID)) DBGVIEW($(DBGVIEW)) DBGENCKEY($(DBGENCKEY)) USRPRF($(USRPRF)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') TGTRLS($(TGTRLS)) INCDIR($(INCDIR))
 CRTBNDCBLFLAGS = TGTCCSID($(TGTCCSID)) DBGVIEW($(DBGVIEW)) DBGENCKEY($(DBGENCKEY)) USRPRF($(USRPRF)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') TGTRLS($(TGTRLS)) INCDIR($(INCDIR))
@@ -558,7 +558,7 @@ iasp="$(iasp)"\
 $(eval directory := $(subst /,_,$(patsubst $(SRCPATH)/%,%,$(dir $<)))) \
 $(eval directory := $(if $(filter ._,$(directory)),,$(directory))) \
 $(eval file := $(subst .,_,$(notdir $@))) \
-$(eval logFile := $(LOGPATH)/$(directory)$(file).splf)
+$(eval logFile := $(LOGPATH)/$(directory)$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_3,'$(file)')).splf)
 endef
 
 define SETCURLIBTOOBJLIB =
@@ -583,6 +583,30 @@ define POSTCCOMPILE =
 
 endef
 
+define replace_DOLLARESCAPE=
+$(subst DOLLARESCAPE_,\$$$,$1)
+endef
+
+define replace_DOLLARESCAPE_3=
+$(subst DOLLARESCAPE_,$$$,$1)
+endef
+
+define replace_DOLLARESCAPE_2=
+$(subst DOLLARESCAPE_,$$,$1)
+endef
+
+define replace_DOLLAR_ESCAPE=
+$(subst $,DOLLARESCAPE_,$1)
+endef
+
+define replace_DOLLAR_2=
+$(subst $,\$$$,$1)
+endef
+
+define replace_DOLLAR_1=
+$(subst $,$$,$1)
+endef
+
 # cleanRPGDeps removes from the CRTRPGMOD- and CRTSQLRPGI-generated events file any system header files
 # plus any SQL precompiler-generated source member, and returns what's left.
 cleanRPGDeps = awk '$$1 == "FILEID" && $$6 !~ /^QTEMP/ && toupper($$6) !~ /QSYS/ && $$6 !~ /EVFTEMPF0[12]/ && $$6 !~ /$(basename $(notdir $<)).MBR$$/ { print toupper($$6) }'
@@ -597,7 +621,10 @@ cleanRPGDeps = awk '$$1 == "FILEID" && $$6 !~ /^QTEMP/ && toupper($$6) !~ /QSYS/
 # - The above is not being done at this time
 #  parm is name of local evfevent file (might have .PGM.eventf suffix)
 define EVFEVENT_DOWNLOAD =
-system "CPYTOSTMF FROMMBR('$(OBJPATH)/EVFEVENT.FILE/$(basename $@).MBR') TOSTMF('$(EVTDIR)/$1') STMFCCSID(1208) ENDLINFMT(*LF) CVTDTA(*AUTO) STMFOPT(*REPLACE)" >/dev/null
+$("Inside EVFEVENT_DOWNLOAD, parm is $1")\
+$(eval MBRNAME := $(call replace_DOLLARESCAPE,$(basename $(@F))))\
+$(eval MBRNAME1:= $(call replace_DOLLARESCAPE,$(call ESCAPE_FOR_SLASH,$1)))\
+system "CPYTOSTMF FROMMBR('$(OBJPATH)/EVFEVENT.FILE/$(call REPLACE_TO_HASH,$(MBRNAME)).MBR') TOSTMF('$(EVTDIR)/$(MBRNAME1)') STMFCCSID(1208) ENDLINFMT(*LF) CVTDTA(*AUTO) STMFOPT(*REPLACE)" >/dev/null
 endef
 # define POSTRPGCOMPILE =
 # $(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent.evfevent);
@@ -1128,6 +1155,21 @@ srvpgmTGTRLS = $(strip \
 	$(if $(filter %.sqlvar,$<),$(SQL_TGTRLS), \
 	UNKNOWN_FILE_TYPE)))))))))
 
+#Replacing # with \# to handle directory of target filename
+define ESCAPE_FOR_SLASH
+$(subst #,\#,$1)
+endef
+
+#Replacing HASHESCAPE_ with \# to handle file name of the target 
+define REPLACE_TO_SLASH
+$(subst HASHESCAPE_,\#,$1)
+endef
+
+#Replacing HASHESCAPE_ with # to handle external dependency program and EVFEVENT file name properly
+define REPLACE_TO_HASH
+$(subst HASHESCAPE_,#,$1)
+endef
+
 #    ____ __  __ ____    ____           _
 #   / ___|  \/  |  _ \  |  _ \ ___  ___(_)_ __   ___  ___
 #  | |   | |\/| | | | | | |_) / _ \/ __| | '_ \ / _ \/ __|
@@ -1138,33 +1180,33 @@ srvpgmTGTRLS = $(strip \
 define CMDSRC_TO_CMD_RECIPE =
 	$(eval AUT = $(CMD_AUT))
 	$(eval ALLOW = $(CMD_ALLOW))
-	$(eval HLPID = $(CMD_HLPID))
-	$(eval HLPPNLGRP = $(CMD_HLPPNLGRP))
+	$(eval HLPID = $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_3,$(CMD_HLPID))))
+	$(eval HLPPNLGRP = $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_3,$(CMD_HLPPNLGRP))))
 	$(eval PMTFILE = $(CMD_PMTFILE))
 	$(eval VLDCKR = $(CMD_VLDCKR))
 	$(eval CURLIB = $(CMD_CURLIB))
 	$(eval PRDLIB = $(CMD_PRDLIB))
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating command [$(notdir $<)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := CRTCMD CMD($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) \
-        srcstmf('$<') PGM($(if $(CMD_PGM_LIB),$(CMD_PGM_LIB),$(call ESCAPE_FOR_RECIPE,$(OBJLIB)))/$(CMD_PGM)) $(CRTCMDFLAGS))
+	@$(call echo_cmd,"=== Creating command ['$(notdir $<)'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
+	$(eval crtcmd := CRTCMD CMD($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) \
+        srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') PGM($(if $(CMD_PGM_LIB),$(CMD_PGM_LIB),$(call ESCAPE_FOR_RECIPE,$(OBJLIB)))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(CMD_PGM)))) $(CRTCMDFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile)> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@);
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" $(logFile)> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)));
 endef
 define CMD_TO_CMD_RECIPE =
 	$(eval AUT = $(CMD_AUT))
 	$(eval ALLOW = $(CMD_ALLOW))
-	$(eval HLPID = $(CMD_HLPID))
-	$(eval HLPPNLGRP = $(CMD_HLPPNLGRP))
+	$(eval HLPID = $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_3,$(CMD_HLPID))))
+	$(eval HLPPNLGRP = $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_3,$(CMD_HLPPNLGRP))))
 	$(eval PMTFILE = $(CMD_PMTFILE))
 	$(eval VLDCKR = $(CMD_VLDCKR))
 	$(eval CURLIB = $(CMD_CURLIB))
 	$(eval PRDLIB = $(CMD_PRDLIB))
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating command [$(notdir $<)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := CRTCMD CMD($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) srcstmf('$<') PGM($(if $(CMD_PGM_LIB),$(CMD_PGM_LIB),$(call ESCAPE_FOR_RECIPE,$(OBJLIB)))/$(CMD_PGM)) $(CRTCMDFLAGS))
+	@$(call echo_cmd,"=== Creating command ['$(notdir $<)'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
+	$(eval crtcmd := CRTCMD CMD($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') PGM($(if $(CMD_PGM_LIB),$(CMD_PGM_LIB),$(call ESCAPE_FOR_RECIPE,$(OBJLIB)))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(CMD_PGM)))) $(CRTCMDFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile)> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@);
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" $(logFile)> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)));
 endef
 
 
@@ -1195,42 +1237,42 @@ endef
 define DSPF_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating DSPF [$(notdir $<)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTDSPF" -p $(CRTDSPFFLAGS))
+	@$(call echo_cmd,"=== Creating DSPF ['$(notdir $<)'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTDSPF" -p $(CRTDSPFFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTDSPF" -p "$(CRTDSPFFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTDSPF" -p "$(CRTDSPFFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
 define LF_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating LF [$(notdir $<)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTLF" -p $(CRTLFFLAGS))
+	@$(call echo_cmd,"=== Creating LF ['$(notdir $<)'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTLF" -p $(CRTLFFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTLF" -p "$(CRTLFFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTLF" -p "$(CRTLFFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 	@$(TYPEDEF)
 endef
 
 define PF_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
-	@$(call echo_cmd,"=== Creating PF [$(notdir $<)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPF" -p $(CRTPFFLAGS))
+	@$(call echo_cmd,"=== Creating PF ['$(notdir $<)'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPF" -p $(CRTPFFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPF" -p "$(CRTPFFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPF" -p "$(CRTPFFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 	@$(TYPEDEF)
 endef
 
 define PRTF_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating PRTF [$(notdir $<)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPRTF" -p $(CRTPRTFFLAGS))
+	@$(call echo_cmd,"=== Creating PRTF ['$(notdir $<)'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPRTF" -p $(CRTPRTFFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPRTF" -p "$(CRTPRTFFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPRTF" -p "$(CRTPRTFFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 	@$(TYPEDEF)
 endef
 
@@ -1239,13 +1281,13 @@ endef
 define TABLE_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating SQL TABLE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL TABLE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
 	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 # @$(TOOLSPATH)/checkObjectAlreadyExists $@ $(OBJLIB)
@@ -1253,13 +1295,13 @@ endef
 define PFSQL_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating SQL PFSQL $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL PFSQL $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
 	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 # @$(TOOLSPATH)/checkObjectAlreadyExists $@ $(OBJLIB)
@@ -1267,49 +1309,49 @@ endef
 define VIEW_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating SQL VIEW $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL VIEW $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
 	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define INDEX_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating SQL INDEX $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL INDEX $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
 	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define SQLUDT_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating SQL UDT $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL UDT $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
 	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define SQLALIAS_TO_FILE_RECIPE =
 	$(FILE_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating SQL ALIAS $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL ALIAS $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
 	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*FILE) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 
@@ -1327,13 +1369,13 @@ endef
 define SQLSEQ_TO_DTAARA_RECIPE =
 	$(DTAARA_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating SQL SEQUENCE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL SEQUENCE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
 	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*DTAARA) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 #   __  __ _____ _   _ _   _   ____           _
@@ -1355,11 +1397,11 @@ define MENUSRC_TO_MENU_RECIPE =
 	$(MENU_VARIABLES)
 	$(eval d = $($@_d))
 	$(eval RCDLEN = 268)
-	@$(call echo_cmd,"=== Creating menu [$(notdir $<)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTMNU" -r $(RCDLEN)  -p $(CRTMNUFLAGS))
+	@$(call echo_cmd,"=== Creating menu ['$(notdir $<)'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))$(ECHOCCSID)")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTMNU" -r $(RCDLEN)  -p $(CRTMNUFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTMNU" -r $(RCDLEN) -p "$(CRTMNUFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTMNU" -r $(RCDLEN) -p "$(CRTMNUFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
 define MNUCMD_TO_MSGF_RECIPE =
@@ -1408,11 +1450,11 @@ endef
 
 define C_TO_MODULE_RECIPE =
 	$(MODULE_VARIABLES)
-	@$(call echo_cmd,"=== Creating C module [$(notdir $<)]$(ECHOCCSID)")
-	$(eval crtcmd := crtcmod module($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) srcstmf('$<') $(CRTCMODFLAGS) $(ADHOCCRTFLAGS))
+	@$(call echo_cmd,"=== Creating C module ['$(notdir $<)']$(ECHOCCSID)")
+	$(eval crtcmd := crtcmod module($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') $(CRTCMODFLAGS) $(ADHOCCRTFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile)> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@($(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent); ret=$$?; rm $(DEPDIR)/$*.Td 2>/dev/null; exit $$ret)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" $(logFile)> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@($(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent); ret=$$?; rm $(DEPDIR)/$*.Td 2>/dev/null; exit $$ret)
 	@$(POSTCCOMPILE)
 endef
 
@@ -1420,74 +1462,74 @@ endef
 # spawn a job and lose the ability to get joblog info
 define CPP_TO_MODULE_RECIPE =
 	$(MODULE_VARIABLES)
-	@$(call echo_cmd,"=== Creating CPP module [$(notdir $<)] Note environment and library list are not set up")
-	$(eval crtcmd := crtcppmod module($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) srcstmf('$<') $(CRTCMODFLAGS) $(ADHOCCRTFLAGS))
+	@$(call echo_cmd,"=== Creating CPP module ['$(notdir $<)'] Note environment and library list are not set up")
+	$(eval crtcmd := crtcppmod module($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') $(CRTCMODFLAGS) $(ADHOCCRTFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)"  "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "Y"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@($(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent); ret=$$?; rm $(DEPDIR)/$*.Td 2>/dev/null; exit $$ret)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)"  "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" $(logFile) "Y"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@($(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent); ret=$$?; rm $(DEPDIR)/$*.Td 2>/dev/null; exit $$ret)
 	@$(POSTCCOMPILE)
 endef
 
 define RPGLE_TO_MODULE_RECIPE =
 	$(MODULE_VARIABLES)\
-	@$(call echo_cmd,"=== Creating RPG module [$(notdir $<)]$(ECHOCCSID)")
-	$(eval crtcmd := crtrpgmod module($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) srcstmf('$<') $(CRTRPGMODFLAGS))
+	@$(call echo_cmd,"=== Creating RPG module ['$(notdir $<)']$(ECHOCCSID)")
+	$(eval crtcmd := crtrpgmod module($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') $(CRTRPGMODFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
 define CLLE_TO_MODULE_RECIPE =
 	$(MODULE_VARIABLES)
-	@$(call echo_cmd,"=== Creating CL module [$(notdir $<)]$(ECHOCCSID)")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCLMOD" -p $(CRTCLMODFLAGS))
+	@$(call echo_cmd,"=== Creating CL module ['$(notdir $<)']$(ECHOCCSID)")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCLMOD" -p $(CRTCLMODFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCLMOD" -p "$(CRTCLMODFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCLMOD" -p "$(CRTCLMODFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
 define SQLC_TO_MODULE_RECIPE =
 	$(MODULE_VARIABLES)
-	@$(call echo_cmd,"=== Creating SQLC module [$(notdir $<)]$(ECHOCCSID)")
-	$(eval crtcmd := crtsqlci obj($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) srcstmf('$<') $(CRTSQLCIFLAGS))
+	@$(call echo_cmd,"=== Creating SQLC module ['$(notdir $<)']$(ECHOCCSID)")
+	$(eval crtcmd := crtsqlci obj($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') $(CRTSQLCIFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@($(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent); ret=$$?; rm $(DEPDIR)/$*.Td 2>/dev/null;  exit $$ret)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@($(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent); ret=$$?; rm $(DEPDIR)/$*.Td 2>/dev/null;  exit $$ret)
 endef
 
 define SQLCPP_TO_MODULE_RECIPE =
 	$(MODULE_VARIABLES)
-	@$(call echo_cmd,"=== Creating SQLCPP module [$(notdir $<)]$(ECHOCCSID)")
-	$(eval crtcmd := crtsqlcppi obj($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) srcstmf('$<') $(CRTSQLCPPIFLAGS))
+	@$(call echo_cmd,"=== Creating SQLCPP module ['$(notdir $<)']$(ECHOCCSID)")
+	$(eval crtcmd := crtsqlcppi obj($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') $(CRTSQLCPPIFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@($(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent); ret=$$?; rm $(DEPDIR)/$*.Td 2>/dev/null;  exit $$ret)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@($(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent); ret=$$?; rm $(DEPDIR)/$*.Td 2>/dev/null;  exit $$ret)
 endef
 
 define SQLRPGLE_TO_MODULE_RECIPE =
 	$(MODULE_VARIABLES)
-	@$(call echo_cmd,"=== Creating SQLRPGLE module [$(notdir $<)]$(ECHOCCSID)")
-	$(eval crtcmd := crtsqlrpgi obj($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) srcstmf('$<') $(CRTSQLRPGIFLAGS))
+	@$(call echo_cmd,"=== Creating SQLRPGLE module ['$(notdir $<)']$(ECHOCCSID)")
+	$(eval crtcmd := crtsqlrpgi obj($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') $(CRTSQLRPGIFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 	@$(call EVFEVENT_DOWNLOAD,$(notdir $<).evfevent)
 endef
 
 define CBLLE_TO_MODULE_RECIPE =
 	$(MODULE_VARIABLES)
-	@$(call echo_cmd,"=== Creating ILE COBOL module [$(basename $@)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := crtcblmod module($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) srcstmf('$<') $(CRTCBLMODFLAGS))
+	@$(call echo_cmd,"=== Creating ILE COBOL module ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
+	$(eval crtcmd := crtcblmod module($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') $(CRTCBLMODFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
 define SQLCBLLE_TO_MODULE_RECIPE =
 	$(MODULE_VARIABLES)
-	@$(call echo_cmd,"=== Creating SQLCBLLE module [$(notdir $<)]$(ECHOCCSID)")
-	$(eval crtcmd := crtsqlcbli obj($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) srcstmf('$<') $(CRTSQLCBLIFLAGS))
+	@$(call echo_cmd,"=== Creating SQLCBLLE module ['$(notdir $<)']$(ECHOCCSID)")
+	$(eval crtcmd := crtsqlcbli obj($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') $(CRTSQLCBLIFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 	@$(call EVFEVENT_DOWNLOAD,$(notdir $<).evfevent)
 endef
 
@@ -1519,108 +1561,108 @@ endef
 
 define SQLPRC_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating SQL PROCEDURE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL PROCEDURE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
 	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*PGM) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define SQLTRG_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating SQL TRIGGER $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL TRIGGER $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
-	$(eval mbrtextcmd :=  $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*PGM) TEXT('$(subst ','',$(TEXT))')))
+	$(eval mbrtextcmd :=  $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(call REPLACE_TO_SLASH,$(notdir $@)))) OBJTYPE(*PGM) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 
 define PGM.RPGLE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating Bound RPG Program [$(basename $@)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := CRTBNDRPG srcstmf('$<') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) $(CRTBNDRPGFLAGS))
+	@$(call echo_cmd,"=== Creating Bound RPG Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
+	$(eval crtcmd := CRTBNDRPG srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) $(CRTBNDRPGFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $@).PGM.evfevent)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $@)).PGM.evfevent)
 endef
 
 define PGM.SQLRPGLE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating Bound SQLRPGLE Program [$(basename $@)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := CRTSQLRPGI srcstmf('$<') OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) $(CRTSQLRPGIFLAGS))
+	@$(call echo_cmd,"=== Creating Bound SQLRPGLE Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
+	$(eval crtcmd := CRTSQLRPGI srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) $(CRTSQLRPGIFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $@).PGM.evfevent)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $@)).PGM.evfevent)
 endef
 
 define PGM.C_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating Bound C Program [$(basename $@)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := CRTBNDC srcstmf('$<') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) $(CRTBNDCFLAGS))
+	@$(call echo_cmd,"=== Creating Bound C Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
+	$(eval crtcmd := CRTBNDC srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) $(CRTBNDCFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).PGM.evfevent)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).PGM.evfevent)
 endef
 
 define CBL_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating COBOL Program [$(basename $@)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
+	@$(call echo_cmd,"=== Creating COBOL Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
 	$(eval dep_list := $(subst $(space),$(comma),$(filter-out $< $(OBJECT_TARGET_PATTERNS),$^)))
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCBLPGM" -p $(CRTCBLPGMFLAGS) $(if $(dep_list),-d "$(dep_list)"))
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCBLPGM" -p $(CRTCBLPGMFLAGS) $(if $(dep_list),-d "$(dep_list)"))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCBLPGM" -p "$(CRTCBLPGMFLAGS)" -d "$(dep_list)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCBLPGM" -p "$(CRTCBLPGMFLAGS)" -d "$(dep_list)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
 define PGM.CBLLE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating COBOL Program [$(basename $@)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := CRTBNDCBL srcstmf('$<') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) $(CRTBNDCBLFLAGS))
+	@$(call echo_cmd,"=== Creating COBOL Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
+	$(eval crtcmd := CRTBNDCBL srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) $(CRTBNDCBLFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).PGM.evfevent)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).PGM.evfevent)
 endef
 
 define PGM.SQLCBLLE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating Bound SQLCBLLE Program [$(basename $@)] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := crtsqlcbli srcstmf('$<') OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) $(CRTSQLCBLIFLAGS))
+	@$(call echo_cmd,"=== Creating Bound SQLCBLLE Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
+	$(eval crtcmd := crtsqlcbli srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) $(CRTSQLCBLIFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $@).PGM.evfevent)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $@)).PGM.evfevent)
 endef
 
 define PGM.CLLE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating ILE CL Program [$(basename $@)]")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTBNDCL" -p $(CRTBNDCLFLAGS))
+	@$(call echo_cmd,"=== Creating ILE CL Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))']")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTBNDCL" -p $(CRTBNDCLFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTBNDCL" -p "$(CRTBNDCLFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTBNDCL" -p "$(CRTBNDCLFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
 define CLP_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating OPM CL Program [$(basename $@)]")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCLPGM" -p $(CRTCLPGMFLAGS))
+	@$(call echo_cmd,"=== Creating OPM CL Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))']")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCLPGM" -p $(CRTCLPGMFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCLPGM" -p "$(CRTCLPGMFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTCLPGM" -p "$(CRTCLPGMFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
 define RPG_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating RPG Program [$(basename $@)]")
+	@$(call echo_cmd,"=== Creating RPG Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))']")
 	$(eval dep_list := $(subst $(space),$(comma),$(filter-out $< $(OBJECT_TARGET_PATTERNS),$^)))
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTRPGPGM" -p $(CRTRPGPGMFLAGS) $(if $(dep_list),-d "$(dep_list)"))
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTRPGPGM" -p $(CRTRPGPGMFLAGS) $(if $(dep_list),-d "$(dep_list)"))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTRPGPGM" -p "$(CRTRPGPGMFLAGS)" -d "$(dep_list)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(basename $(@F)).evfevent)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTRPGPGM" -p "$(CRTRPGPGMFLAGS)" -d "$(dep_list)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $(@F))).evfevent)
 endef
 
 define SQLRPG_TO_PGM_RECIPE =
@@ -1636,20 +1678,20 @@ endef
 
 define ILEPGM_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating program [$(tgt)] from Pseudo Source [$(basename $(notdir $<))]")
-	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc $< '$(value OBJLIB)' $(basename $(@F))))
+	@$(call echo_cmd,"=== Creating program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(tgt)))'] from Pseudo Source ['$(notdir $<)']")
+	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc '$(call ESCAPE_FOR_SLASH,$(call replace_DOLLARESCAPE_2,$<))' '$(value OBJLIB)' '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))'))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$<" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(basename $(@F)) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(call REPLACE_TO_SLASH,$(basename $(@F))) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$<)" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define MODULE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
-	@$(call echo_cmd,"=== Creating program [$(tgt)] from modules [$(basename $(filter %.MODULE,$(notdir $^)))] and service programs [$(basename $(filter %.SRVPGM,$(notdir $^$|)))]")
+	@$(call echo_cmd,"=== Creating program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(tgt)))'] from modules ['$(call REPLACE_TO_HASH,$(basename $(filter %.MODULE,$(call replace_DOLLARESCAPE_2,$(notdir $^)))))'] and service programs ['$(call REPLACE_TO_HASH,$(basename $(filter %.SRVPGM,$(call replace_DOLLARESCAPE_2,$(notdir $^$|)))))']")
 	$(eval externalsrvpgms := $(filter %.SRVPGM,$(subst .LIB,,$(subst /QSYS.LIB/,,$|))))
-	$(eval crtcmd := crtpgm pgm($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) module($(basename $(filter %.MODULE,$(notdir $^)))) bndsrvpgm($(if $(BNDSRVPGMPATH),$(BNDSRVPGMPATH),*NONE)) $(CRTPGMFLAGS))
+	$(eval crtcmd := crtpgm pgm($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) module($(call ESCAPE_FOR_SLASH,$(call REPLACE_TO_HASH,$(basename $(filter %.MODULE,$(call replace_DOLLARESCAPE,$(notdir $^))))))) bndsrvpgm($(if $(BNDSRVPGMPATH),$(BNDSRVPGMPATH),*NONE)) $(CRTPGMFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-	@$(call EVFEVENT_DOWNLOAD,$(tgt).PGM.evfevent)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_HASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(tgt)).PGM.evfevent)
 endef
 
 #   ____  _   _ _     ____ ____  ____    ____           _
@@ -1668,10 +1710,10 @@ define PNLGRPSRC_TO_PNLGRP_RECIPE =
 	$(PNLGRP_VARIABLES)
 	$(eval d = $($@_d))
 	$(eval RCDLEN = 268)
-	@$(call echo_cmd,"=== Creating panel group [$(basename $@)]")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPNLGRP" -r $(RCDLEN) -p $(CRTPNLGRPFLAGS))
+	@$(call echo_cmd,"=== Creating panel group ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))']")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPNLGRP" -r $(RCDLEN) -p $(CRTPNLGRPFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPNLGRP" -r $(RCDLEN) -p "$(CRTPNLGRPFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTPNLGRP" -r $(RCDLEN) -p "$(CRTPNLGRPFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 
@@ -1699,42 +1741,43 @@ endef
 define SQLUDF_TO_SRVPGM_RECIPE =
 	$(SRVPGM_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating SQL UDF $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@)) from Sql statement [$(notdir $<)]")
+	@$(call echo_cmd,"=== Creating SQL UDF $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
 	$(eval tempFile := $(shell mktemp))
 	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
 	$(eval mbrtextcmd := $(if $(TEXT),CHGOBJD OBJ($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(notdir $@))) OBJTYPE(*SRVPGM) TEXT('$(subst ','',$(TEXT))')))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define BND_TO_SRVPGM_RECIPE =
 	$(SRVPGM_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating service program [$(tgt)] from modules [$(basename $(filter %.MODULE,$(notdir $^)))] and service programs [$(basename $(filter %.SRVPGM,$(notdir $^$|)))]")
+	@$(call echo_cmd,"=== Creating service program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(tgt)))'] from modules ['$(call REPLACE_TO_HASH,$(basename $(filter %.MODULE,$(call replace_DOLLARESCAPE_2,$(notdir $^)))))'] and service programs ['$(call REPLACE_TO_HASH,$(basename $(filter %.SRVPGM,$(call replace_DOLLARESCAPE_2,$(notdir $^$|))))')]")
 	$(eval externalsrvpgms := $(filter %.SRVPGM,$(subst .LIB,,$(subst /QSYS.LIB/,,$|))))
-	$(eval crtcmd := CRTSRVPGM srcstmf('$<') SRVPGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(basename $(@F))) MODULE($(basename $(filter %.MODULE,$(notdir $^)))) BNDSRVPGM($(if $(BNDSRVPGMPATH),$(BNDSRVPGMPATH),*NONE)) $(CRTSRVPGMFLAGS))
+	$(eval crtcmd := CRTSRVPGM srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') SRVPGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) module($(call ESCAPE_FOR_SLASH,$(call REPLACE_TO_HASH,$(basename $(filter %.MODULE,$(call replace_DOLLARESCAPE,$(notdir $^))))))) BNDSRVPGM($(if $(BNDSRVPGMPATH),$(BNDSRVPGMPATH),*NONE)) $(CRTSRVPGMFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define ILESRVPGM_TO_SRVPGM_RECIPE =
 	$(SRVPGM_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating service program [$(tgt)] from [$(notdir $<)]")
-	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc $< '$(value OBJLIB)' $(basename $(@F))))
+	@$(call echo_cmd,"=== Creating service program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(tgt)))'] from ['$(notdir $<)']")
+	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc '$(call ESCAPE_FOR_SLASH,$(call replace_DOLLARESCAPE_2,$<))' '$(value OBJLIB)' '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))'))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$<" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(basename $(@F)) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(call REPLACE_TO_SLASH,$(basename $(@F))) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$<)" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define SQLVAR_TO_SRVPGM_RECIPE =
     $(SRVPGM_VARIABLES)
     $(eval d = $($@_d))
-    @$(call echo_cmd,"=== Creating SQL Global Variable [$(notdir $<)]")
-    $(eval crtcmd := RUNSQLSTM srcstmf('$<') $(RUNSQLFLAGS))
+    @$(call echo_cmd,"=== Creating SQL Global Variable ['$(notdir $<)']")
+    $(eval crtcmd := RUNSQLSTM srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') $(RUNSQLFLAGS))
     @$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)" "" "$(mbrtextcmd)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)" "" "$(mbrtextcmd)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
+
 
 #    ___ _____ _   _ _____ ____    ____           _
 #   / _ \_   _| | | | ____|  _ \  |  _ \ ___  ___(_)_ __   ___  ___
@@ -1746,52 +1789,52 @@ endef
 
 define BNDDIR_TO_BNDDIR_RECIPE =
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating BND from [$(notdir $<)]")
-	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc $< '$(value OBJLIB)' $(basename $(@F))))
+	@$(call echo_cmd,"=== Creating BND from ['$(notdir $<)']")
+	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc '$(call ESCAPE_FOR_SLASH,$(call replace_DOLLARESCAPE_2,$<))' '$(value OBJLIB)' '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))'))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$<" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(basename $(@F)) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(call REPLACE_TO_SLASH,$(basename $(@F))) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$<)" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define DTAARA_TO_DTAARA_RECIPE =
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating DTAARA from [$(notdir $<)]")
-	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc $< '$(value OBJLIB)' $(basename $(@F))))
+	@$(call echo_cmd,"=== Creating DTAARA from ['$(notdir $<)']")
+	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc '$(call ESCAPE_FOR_SLASH,$(call replace_DOLLARESCAPE_2,$<))' '$(value OBJLIB)' '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))'))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$<" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(basename $(@F)) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(call REPLACE_TO_SLASH,$(basename $(@F))) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$<)" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define DTAQ_TO_DTAQ_RECIPE =
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating DTAQ from [$(notdir $<)]")
-	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc $< '$(value OBJLIB)' $(basename $(@F))))
+	@$(call echo_cmd,"=== Creating DTAQ from ['$(notdir $<)']")
+	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc '$(call ESCAPE_FOR_SLASH,$(call replace_DOLLARESCAPE_2,$<))' '$(value OBJLIB)' '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))'))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$<" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(basename $(@F)) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(call REPLACE_TO_SLASH,$(basename $(@F))) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$<)" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 
 define SYSTRG_TO_TRG_RECIPE =
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating System TRG from [$(notdir $<)]")
-	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc $< '$(value OBJLIB)' $(basename $(@F))))
+	@$(call echo_cmd,"=== Creating System TRG from ['$(notdir $<)']")
+	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc '$(call ESCAPE_FOR_SLASH,$(call replace_DOLLARESCAPE_2,$<))' '$(value OBJLIB)' '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))'))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$<" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(basename $(@F)) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(call REPLACE_TO_SLASH,$(basename $(@F))) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$<)" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define SQL_RECIPE =
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Running SQL Statement from [$(notdir $<)]")
-	$(eval crtcmd := RUNSQLSTM srcstmf('$<'))
+	@$(call echo_cmd,"=== Running SQL Statement from ['$(notdir $<)']")
+	$(eval crtcmd := RUNSQLSTM srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))'))
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define MSGF_RECIPE =
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating Message from [$(notdir $<)]")
-	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc $< '$(value OBJLIB)' $(basename $(@F))))
+	@$(call echo_cmd,"=== Creating Message from ['$(notdir $<)']")
+	$(eval crtcmd := $(shell $(SCRIPTSPATH)/extractPseudoSrc '$(call ESCAPE_FOR_SLASH,$(call replace_DOLLARESCAPE_2,$<))' '$(value OBJLIB)' '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))'))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$<" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(basename $(@F)) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$<" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/extractAndLaunch "$(JOBLOGFILE)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) $(call REPLACE_TO_SLASH,$(basename $(@F))) "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$<)" "$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define WSCST_VARIABLES =
@@ -1800,11 +1843,10 @@ endef
 
 define WSCSTSRC_TO_WSCST_RECIPE =
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating work station customizing object [$(tgt)]")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB))
-	-c "CRTWSCST" -p $(CRTWSCSTFLAGS))
+	@$(call echo_cmd,"=== Creating work station customizing object ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(tgt)))']")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTWSCST" -p $(CRTWSCSTFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTWSCST" -p "$(CRTWSCSTFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTWSCST" -p "$(CRTWSCSTFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define QMQRY_VARIABLES =
@@ -1814,11 +1856,12 @@ endef
 define SQL_TO_QMQRY_RECIPE =
 	$(QMQRY_VARIABLES)
 	$(eval d = $($@_d))
-	@$(call echo_cmd,"=== Creating QM query [$(basename $@)]")
-	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTQMQRY" -p $(CRTQMQRYFLAGS))
+	@$(call echo_cmd,"=== Creating QM query ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))']")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTQMQRY" -p $(CRTQMQRYFLAGS))
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID) -f $< -o $(basename $(@F)) -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTQMQRY" -p "$(CRTQMQRYFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
+	$(SCRIPTSPATH)/crtfrmstmf --ccsid $(TGTCCSID)  -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTQMQRY" -p "$(CRTQMQRYFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
+
 
 # $(DEPDIR)/%.d: ;
 # .PRECIOUS: $(DEPDIR)/%.d

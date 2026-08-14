@@ -7,6 +7,10 @@ precmd=$3
 postcmd=$4
 object=$5
 source=$6
+#Escapes # as \#
+source="${source//\\#/#}"
+#Escapes $ as DOLLARESCAPE_
+source="${source/DOLLARESCAPE_/$}"
 output=$7
 text_command=$8
 VPATH=$9

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 pseudoSrcFile=$1
+#Escapes \# back to #
+pseudoSrcFile="${pseudoSrcFile//\\#/#}"
 objlib=$2
 objname=$3
 
@@ -12,15 +14,17 @@ while read -r line; do
   if [[ $line = '/*'* ]]; then continue; fi
   if [[ $line = '' ]]; then continue; fi
   if [[ $line =~ .*\+\S*$ ]]; then
-    linetmp=$(echo "$line" | sed 's/\+\S*$//')
+    linetmp=$(echo "$line" | sed 's/\+\S*$//' | sed 's/\$/DOLLARESCAPE_/g' | sed 's/$/DOLLARESCAPE_/g')
     cmd="${cmd} ${linetmp}"
     continue
 
   fi
-
+  line=$(echo "$line" | sed 's/\$/DOLLARESCAPE_/g')
   cmd+=$line
   if [ -n "$cmd" ]; then
-    result+=$(echo "$cmd" | sed "s/&O/$objlib/g" | sed "s/&N/$objname/g")
+    # Escape special characters for sed
+    escaped_objname=$(printf '%s\n' "$objname" | sed 's/[&/\$]/\\&/g')
+    result+=$(echo "$cmd" | sed 's/#/\\#/g' | sed "s/&O/$objlib/g" | sed "s/&N/$escaped_objname/g")
     result+="\n"
     cmd=""
   fi
