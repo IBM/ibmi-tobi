@@ -1,2 +1,2 @@
-SUBDIRS = inner
+SUBDIRS = innerdir1 innerdir2
 HELLO.MODULE: HELLOP.RPGLE

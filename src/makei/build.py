@@ -220,10 +220,34 @@ class BuildEnv:
                 targets_to_build.append(escaped_target)
         return targets_to_build
 
+    def _collect_rules_mk_paths(self, root: Path) -> List[Path]:
+        """Collect Rules.mk paths by following SUBDIRS chains from root.
+        Only folders explicitly declared in SUBDIRS are visited — unlisted
+        folders (dot-dirs, work-in-progress, etc.) are completely ignored.
+        """
+        rules_mk = root / "Rules.mk"
+        if not rules_mk.exists():
+            return []
+        with rules_mk.open() as f:
+            subdirs = next(
+                (
+                    line.split("=", 1)[1].split("#")[0].split()
+                    for line in f
+                    if line.strip().startswith("SUBDIRS")
+                ),
+                [],
+            )
+        result = [rules_mk]
+        for subdir in subdirs:
+            child = root / subdir
+            if child.is_dir():
+                result.extend(self._collect_rules_mk_paths(child))
+        return result
+
     def _create_build_vars(self):
         target_file_path = self.build_vars_path
 
-        rules_mk_paths = list(Path(".").rglob("Rules.mk"))
+        rules_mk_paths = self._collect_rules_mk_paths(Path("."))
         real_targets = []
         # Create Rules.mk.build for each Rules.mk
         for rules_mk_path in rules_mk_paths:
