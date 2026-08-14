@@ -658,7 +658,7 @@ def test_src_obj_mapping_from_root_folder():
     }
     assert rules_mk.src_obj_mapping["HELLOP.RPGLE"] == ["HELLO.MODULE"]
     assert rules_mk.containing_dir == test_dir
-    assert rules_mk.subdirs == ["inner"]
+    assert rules_mk.subdirs == ["innerdir1", "innerdir2"]
     assert rules_mk.targets == expected_targets
 
     assert rules_mk.rules[0].variables == []
@@ -668,7 +668,7 @@ def test_src_obj_mapping_from_root_folder():
     assert rules_mk.rules[0].target == "HELLO.MODULE"
     assert (
         str(rules_mk)
-        == """SUBDIRS := inner
+        == """SUBDIRS := innerdir1 innerdir2
 
 MODULEs := HELLO.MODULE
 
