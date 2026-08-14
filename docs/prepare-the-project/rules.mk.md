@@ -191,7 +191,7 @@ MOD_TGTRLS = V7R3M0
 
 The above two examples are equivalent. Note the use of wildcards for overriding compile settings for objects of the same type.
 
-> [NOTE]
+> [!NOTE]
 >
 > If the target and source share the same extension (e.g. `%.QMQRY: %.qmqry`), the source files **must** be placed in a subdirectory with its own `Rules.mk`. Placing them in the root directory will cause build failures.
 >
@@ -221,6 +221,30 @@ MOD_TEXT := SAMPLE2
 
 EMP.MODULE: private TGTRLS := V7R4M0
 EMP.MODULE: EMP.RPGLE A.TABLE
+```
+
+## Supporting # and $ in Source and Target Name
+
+TOBi supports source and target names containing special characters such as # and $
+
+The following examples show the format for using # and $ in source and target names in the Rules.mk file.
+
+### Source and Target with \#
+
+> [!NOTE]
+>
+> In Make syntax, # is used to indicate a comment, so a literal # must be escaped as \\# to be treated as part of the source or target name.
+
+```text
+SA\#MPLE.MODULE: SA\#MPLE.RPGLE
+SA\#MPLE.PGM: SA\#MPLE.MODULE
+```
+
+### Source and Target with $
+
+```text
+SA$MPLE.MODULE: SA$MPLE.RPGLE
+SA$MPLE.PGM: SA$MPLE.MODULE
 ```
 
 ## Further reading
