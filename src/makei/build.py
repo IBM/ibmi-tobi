@@ -15,7 +15,7 @@ from makei.ibmi_json import IBMiJson
 from makei.iproj_json import IProjJson
 from makei.rules_mk import RulesMk
 from makei.utils import objlib_to_path, \
-    run_command, support_color, print_to_stdout, Colors, colored, get_target_patterns_for_makefile
+    run_command, support_color, print_to_stdout, Colors, colored, get_target_patterns_for_makefile, escape_special_chars
 
 
 class BuildEnv:
@@ -258,11 +258,9 @@ class BuildEnv:
                                 if tgt_normalized in rules_mk_src_obj_mapping:
                                     resolved = rules_mk_src_obj_mapping.pop(tgt_normalized)
                                     # Escape the resolved targets for comparison with escaped_target
-                                    from makei.utils import escape_special_chars
                                     real_targets.extend([escape_special_chars(r) for r in resolved])
                                 # If not found in mapping but contains special chars, it might be a target name
                                 elif '$' in tgt or '#' in tgt:
-                                    from makei.utils import escape_special_chars
                                     escaped_tgt = escape_special_chars(tgt)
                                     if escaped_tgt not in real_targets:
                                         real_targets.append(escaped_tgt)
@@ -298,7 +296,6 @@ class BuildEnv:
             rules_mk_paths, real_targets
         )
         if not skip_timestamp_check:
-            from makei.utils import escape_special_chars
             for rules_mk_path in filtered_rules_mk_paths:
                 rules_mk = RulesMk.from_file(rules_mk_path, str(self.src_dir), map(Path, self.iproj_json.include_path))
                 dir_key = rules_mk_path.parent
