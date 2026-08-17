@@ -1,9 +1,12 @@
-- Resolved build failure to process only referenced files instead of scanning all Rules.mk files globally.
-- Added support to source and target objects with # and $ symbol
-- Fixed false failures for *FILE targets during parallel make -j builds
-- Added support for .TXT files
-- Added support for Wildcards with custom commands in `Rules.mk`
-- Added support to create MENU using DSPF and MSGF objects
+* Mon Aug 17 2026 Het Patel <het.patel@ibm.com> - 3.4.0
+- Resolved build failure by optimizing Rules.mk file scanning to process only referenced files instead of scanning all files globally, using SUBDIRS chain following for improved performance.
+- Fixed false failures for *FILE targets during parallel make -j builds by implementing file locking mechanism using fcntl.flock() for joblog.json to prevent race conditions.
+- Extended wildcard rule support to include custom recipe commands (e.g., %.QMQRY: %.qmqry with custom system calls) with improved Rules.mk parsing and test coverage.
+- Added support for creating *MENU objects from DSPF and MSGF objects with new FILE_MSGF_TO_MENU_RECIPE and MNUCMD_TO_MSGF_RECIPE, including mnucmd_to_msgf.py to generate *MSGF objects from .MNUCMD source.
+- Added support for .TXT file extension by incorporating TXT object type to target groups and mappings, enabling SQL text files and other text-based source handling.
+- Resolved case-sensitivity issues with preUsrLibl and postUsrLibl in iproj.json configuration by accepting both capital L and lowercase l variations.
+- Fixed PRDLIB parameter handling in CMD recipes and added support for CMD_PGM_LIB variable to allow users to specify either a specific library or *LIBL based on requirements.
+- Added comprehensive support for source and target names containing # and $ symbols using escape sequences (HASHESCAPE_ and DOLLARESCAPE_), with timestamp checking optimization and updated documentation across 50+ recipe definitions.
 * Fri May 08 2026 Het Patel <het.patel@ibm.com> - 3.3.0
 - Expanded OPM RPG, COBOL, SQLRPG support with dependency/include files tracking.
 - Added SQLRPG recipe for optimized compilation with embedded SQL queries.
