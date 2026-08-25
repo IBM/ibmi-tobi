@@ -31,13 +31,13 @@ class CvtSrcPf:
 
     def __init__(
         self, srcfile: str, lib: str, tolower: bool, default_ccsid: Optional[str] = None,
-            text: bool = False, save_path: Path = Path.cwd(), iasp: str = "",
+            text: bool = False, save_path: Optional[Path] = None, iasp: str = "",
             rcdlen: int = 240, tmp_src: str = "QCVTSRC") -> None:
         self.job = IBMJob()
 
         self.lib = lib
         self.srcfile = srcfile
-        self.save_path = save_path
+        self.save_path = save_path if save_path is not None else Path.cwd()
         self.iasp = iasp
         if default_ccsid is not None and validate_ccsid(default_ccsid):
             self.default_ccsid = default_ccsid
