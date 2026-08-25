@@ -224,3 +224,9 @@ PNL_STYLE_COMMENTS = (
 )
 
 COMMENT_STYLES = [C_STYLE_COMMENTS, SQL_STYLE_COMMENTS, COBOL_STYLE_COMMENTS, PNL_STYLE_COMMENTS]
+
+EXT_TO_COMMENT_STYLE: dict = {
+    ext.upper(): style["style_type"]
+    for exts, style in COMMENT_STYLES
+    for ext in exts
+}
