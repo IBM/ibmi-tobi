@@ -45,7 +45,7 @@ class CvtSrcPf:
             self.default_ccsid = None
 
         self.tolower = tolower
-        self.ibmi_json_path = save_path / ".ibmi.json"
+        self.ibmi_json_path = self.save_path / ".ibmi.json"
         self.store_member_text = text
         self.iasp_prefix = get_iasp_prefix(self.iasp)
         self.tmp_src = tmp_src
