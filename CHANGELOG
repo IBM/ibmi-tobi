@@ -1,3 +1,4 @@
+- Added tobi and dollar support for custom commands 
 - Resolved build failure to process only referenced files instead of scanning all Rules.mk files globally.
 - Added support to source and target objects with # and $ symbol
 - Fixed false failures for *FILE targets during parallel make -j builds
