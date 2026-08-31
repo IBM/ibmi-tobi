@@ -184,8 +184,9 @@ jobs:
         env:
           IBMI_HOST: ${{ secrets.IBMI_HOST }}
           IBMI_USER: ${{ secrets.IASP_USER }}
-          IBMI_PASSWORD: ${{ secrets.IBMI_PASSWORD }}
+          IASP_PASSWORD: ${{ secrets.IASP_PASSWORD }}
           IBMI_SSH_PORT: ${{ secrets.IBMI_SSH_PORT }}
+          
 
 
   cvtsrcpf-test:
