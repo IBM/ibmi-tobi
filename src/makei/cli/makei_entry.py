@@ -191,6 +191,13 @@ def add_cvtsrcpf_parser(subparsers: argparse.ArgumentParser):
         action='store_true'
     )
 
+    cvtsrcpf_parser.add_argument(
+        '-e',
+        '--env',
+        help='override environment variables',
+        metavar='<var>=<value>',
+        action='append'
+    )
     cvtsrcpf_parser.set_defaults(tolower=False)
     cvtsrcpf_parser.set_defaults(handle=handle_cvtsrcpf)
 
@@ -392,6 +399,7 @@ def handle_cvtsrcpf(args):
     """
     if args.log:
         print(colored("Warning: --trace has no effect on 'cvtsrcpf' command.", Colors.WARNING))
+    set_environment_vars(args)
     iasp = ""
     iproj_path = Path.cwd() / "iproj.json"
     if iproj_path.exists():
