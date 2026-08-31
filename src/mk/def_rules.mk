@@ -1585,11 +1585,12 @@ endef
 define PGM.RPGLE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
 	@$(call echo_cmd,"=== Creating Bound RPG Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := CRTBNDRPG srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) $(CRTBNDRPGFLAGS))
+	$(eval crtcmd := $(if $($@_CRTCMD),$(call ESCAPE_FOR_RECIPE,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE,$($@_CRTCMD)))),CRTBNDRPG srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) $(CRTBNDRPGFLAGS)))
 	@$(PRESETUP) \
 	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
-	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $@)).PGM.evfevent)
+	$(if $($@_CRTCMD),,@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $@)).PGM.evfevent))
 endef
+
 
 define PGM.SQLRPGLE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)

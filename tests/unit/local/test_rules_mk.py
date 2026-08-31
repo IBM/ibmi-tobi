@@ -1763,3 +1763,146 @@ DOLLARDOLLARESCAPE_.MODULE_SRC=dollarDOLLARESCAPE_.rpgle
 DOLLARDOLLARESCAPE_.MODULE_DEP=
 DOLLARDOLLARESCAPE_.MODULE_RECIPE=RPGLE_TO_MODULE_RECIPE
 """)
+
+
+def test_custom_recipe_with_dollar():
+    """Rules with custom commands where the target and dependency contain $ signs.
+
+    Rules.mk:
+        ORD$$$700.PGM: ord$$700.pgm.rpgle
+            cl "ADDLIBLE LIB(TOBI$$TST) POSITION(*FIRST)"
+            cl "ADDLIBLE LIB(WCA4IBOB) POSITION(*FIRST)"
+
+    Two user commands → NOT routed through _is_single_cmd_pgm_rpgle (commands len == 4,
+    not 3).  Falls into the generic CUSTOM_RECIPE path; $ signs in the target and in the
+    cl arguments must be correctly escaped in the emitted Make output.
+    """
+    rules_mk = RulesMk.from_file(data_dir / "dollar_custom.rules.mk", data_dir)
+
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": [],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": [],
+        "SRVPGMs": [],
+        "PGMs": ["ORD$$$700.PGM"],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": [],
+        "WSCSTs": [],
+        "MSGs": [],
+        "TXTs": [],
+    }
+    assert rules_mk.containing_dir == data_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    rule = rules_mk.rules[0]
+    assert rule.target == "ORD$$$700.PGM"
+    assert rule.source_file is None
+    assert rule.dependencies == ["ord$$700.pgm.rpgle"]
+    assert rule.variables == []
+    assert rule.include_dirs == []
+    assert rule.commands == [
+        "@$(call echo_cmd,=== Creating [ORD$$$700.PGM] from custom recipe)",
+        'cl "ADDLIBLE LIB(TOBI$$TST) POSITION(*FIRST)"',
+        'cl "ADDLIBLE LIB(WCA4IBOB) POSITION(*FIRST)"',
+        "@$(call echo_success_cmd,End of creating ORD$$$700.PGM!)",
+    ]
+
+    # $ in target → DOLLARESCAPE_; $$ in dep → $$$$$$$$; $$ in cl args → \\$\\$
+    assert str(rule) == (
+        "ORDDOLLARESCAPE_DOLLARESCAPE_DOLLARESCAPE_700.PGM_CUSTOM_RECIPE=true\n"
+        "ORDDOLLARESCAPE_DOLLARESCAPE_DOLLARESCAPE_700.PGM : ord$$$$$$$$700.pgm.rpgle\n"
+        "\t@$(call echo_cmd,=== Creating [ORD\\$$\\$$\\$$700.PGM] from custom recipe)\n"
+        "\t@printf '%s\\n' 'cl \"ADDLIBLE LIB(TOBI$$$$TST) POSITION(*FIRST)\"'\n"
+        "\t@cl \"ADDLIBLE LIB(TOBI\\$$\\$$TST) POSITION(*FIRST)\"\n"
+        "\tcl \"ADDLIBLE LIB(WCA4IBOB) POSITION(*FIRST)\"\n"
+        "\t@$(call echo_success_cmd,End of creating ORD\\$$\\$$\\$$700.PGM!)\n"
+    )
+
+    assert str(rules_mk) == (
+        "PGMs := ORDDOLLARESCAPE_DOLLARESCAPE_DOLLARESCAPE_700.PGM\n\n\n"
+        "ORDDOLLARESCAPE_DOLLARESCAPE_DOLLARESCAPE_700.PGM_CUSTOM_RECIPE=true\n"
+        "ORDDOLLARESCAPE_DOLLARESCAPE_DOLLARESCAPE_700.PGM : ord$$$$$$$$700.pgm.rpgle\n"
+        "\t@$(call echo_cmd,=== Creating [ORD\\$$\\$$\\$$700.PGM] from custom recipe)\n"
+        "\t@printf '%s\\n' 'cl \"ADDLIBLE LIB(TOBI$$$$TST) POSITION(*FIRST)\"'\n"
+        "\t@cl \"ADDLIBLE LIB(TOBI\\$$\\$$TST) POSITION(*FIRST)\"\n"
+        "\tcl \"ADDLIBLE LIB(WCA4IBOB) POSITION(*FIRST)\"\n"
+        "\t@$(call echo_success_cmd,End of creating ORD\\$$\\$$\\$$700.PGM!)\n"
+    )
+
+
+def test_single_cmd_pgm_rpgle_recipe():
+    """Single custom command for a .pgm.rpgle → .PGM rule is routed to the
+    standard PGM.RPGLE_TO_PGM_RECIPE flow via _is_single_cmd_pgm_rpgle.
+
+    Rules.mk:
+        ORD700.PGM: ord700.pgm.rpgle
+            cl "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"
+
+    The sole user command is extracted as _CRTCMD (quotes stripped), and the
+    rule emits _SRC / _DEP / _RECIPE instead of _CUSTOM_RECIPE.
+    """
+    rules_mk = RulesMk.from_file(data_dir / "single_cmd_pgm.rules.mk", data_dir)
+
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": [],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": [],
+        "SRVPGMs": [],
+        "PGMs": ["ORD700.PGM"],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": [],
+        "WSCSTs": [],
+        "MSGs": [],
+        "TXTs": [],
+    }
+    assert rules_mk.containing_dir == data_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    rule = rules_mk.rules[0]
+    assert rule.target == "ORD700.PGM"
+    assert rule.source_file is None
+    assert rule.dependencies == ["ord700.pgm.rpgle"]
+    assert rule.variables == []
+    assert rule.include_dirs == []
+    assert rule.commands == [
+        "@$(call echo_cmd,=== Creating [ORD700.PGM] from custom recipe)",
+        'cl "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"',
+        "@$(call echo_success_cmd,End of creating ORD700.PGM!)",
+    ]
+
+    # Single cl command → routed through PGM.RPGLE_TO_PGM_RECIPE, not CUSTOM_RECIPE.
+    # The cl wrapper is stripped and the inner CL string becomes _CRTCMD.
+    assert str(rule) == (
+        "ORD700.PGM_CRTCMD=ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)\n"
+        "ORD700.PGM_SRC=ord700.pgm.rpgle\n"
+        "ORD700.PGM_DEP=\n"
+        "ORD700.PGM_RECIPE=PGM.RPGLE_TO_PGM_RECIPE\n"
+    )
+
+    assert str(rules_mk) == (
+        "PGMs := ORD700.PGM\n\n\n"
+        "ORD700.PGM_CRTCMD=ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)\n"
+        "ORD700.PGM_SRC=ord700.pgm.rpgle\n"
+        "ORD700.PGM_DEP=\n"
+        "ORD700.PGM_RECIPE=PGM.RPGLE_TO_PGM_RECIPE\n"
+    )

@@ -61,6 +61,18 @@ class MKRule:
             self.commands.insert(0, f"@$(call echo_cmd,=== Creating [{self.target}] from custom recipe)")
             self.commands.append(f"@$(call echo_success_cmd,End of creating {self.target}!)")
 
+    def _is_single_cmd_pgm_rpgle(self) -> bool:
+        """Returns True when the rule is a single-command custom recipe for a PGM target
+        whose first dependency is an RPGLE source file.  In that case the sole user
+        command is used as the crtcmd inside the standard PGM.RPGLE_TO_PGM_RECIPE flow
+        instead of bypassing it entirely.
+        """
+        if self.target.upper().endswith(".PGM") and len(self.commands) == 3:
+            deps = self._parse_dependencies()
+            if deps and deps[0].upper().endswith(".PGM.RPGLE"):
+                return True
+        return False
+
     def __str__(self):
         # ESCAPE targets that contain $ and #
         escaped_target = escape_special_chars(self.target)
@@ -82,10 +94,54 @@ class MKRule:
             for dep in self.dependencies
         ]
         if len(self.commands) > 0:
-            return f"{escaped_target}_CUSTOM_RECIPE=true" + '\n' + f"{escaped_target} : " \
-                                                                   f"{' '.join(self._parse_dependencies())}" + '\n' + \
-                ''.join(
-                    ['\t' + cmd + '\n' for cmd in self.commands]) + variable_assignment
+            if self._is_single_cmd_pgm_rpgle():
+                deps = self._parse_dependencies()
+                src_file = deps[0].replace(r'\#', 'HASHESCAPE_')
+                src_file = re.sub(r'\$(?!\(d\))', 'DOLLARESCAPE_', src_file)
+                remaining_deps = ' '.join(
+                    re.sub(r'\$(?!\(d\))', 'DOLLARESCAPE_', d.replace(r'\#', 'HASHESCAPE_'))
+                    for d in deps[1:])
+                user_cmd = self.commands[1]  # strip echo wrappers
+                cl_match = re.match(r'^(?:cl|system)(?:\s+-\w+)*\s+"(.*)"$', user_cmd, re.DOTALL)
+                if cl_match:
+                    user_cmd = cl_match.group(1)
+                user_cmd = user_cmd.replace('#', 'HASHESCAPE_')
+                user_cmd = user_cmd.replace('$', 'DOLLARESCAPE_')
+                return (f"{escaped_target}_CRTCMD={user_cmd}\n"
+                        f"{escaped_target}_SRC={src_file}\n"
+                        f"{escaped_target}_DEP={remaining_deps}\n"
+                        f"{escaped_target}_RECIPE=PGM.RPGLE_TO_PGM_RECIPE\n"
+                        + variable_assignment)
+
+            def encode_dollar(s: str) -> str:
+                return re.sub(r'\$(?!\()', '$$$$', s)
+
+            def escape_cmd_dollar(s: str) -> str:
+                return re.sub(r'\$(?!\()', '\\$$', s)
+            escaped_recipe_deps = ' '.join(encode_dollar(d) for d in self._parse_dependencies())
+
+            def escape_dollar_for_recipe(s: str) -> str:
+                return re.sub(r'\$(?!\()', '$$', s)
+
+            cmd_lines = []
+            has_bare_dollar = re.compile(r'\$(?!\()')
+            for cmd in self.commands:
+                if cmd.startswith('@'):
+                    cmd_lines.append('\t' + escape_cmd_dollar(cmd) + '\n')
+                elif has_bare_dollar.search(cmd):
+                    # Command contains a bare $ (not part of a Make variable reference):
+                    # emit a printf echo so the logged command is readable, then run it.
+                    safe_cmd = escape_dollar_for_recipe(cmd.replace("'", "'\\''"))
+                    cmd_lines.append(f"\t@printf '%s\\n' '{safe_cmd}'\n")
+                    cmd_lines.append('\t@' + escape_cmd_dollar(cmd) + '\n')
+                else:
+                    cmd_lines.append('\t' + cmd + '\n')
+
+            escaped_cmds = ''.join(cmd_lines)
+            return (f"{escaped_target}_CUSTOM_RECIPE=true\n"
+                    f"{escaped_target} : {escaped_recipe_deps}\n"
+                    + escaped_cmds + variable_assignment)
+
         try:
             target_type = self.target.split(".")[-1].upper()
             source_file = decompose_filename(self.source_file)[2].upper()
@@ -124,18 +180,18 @@ class MKRule:
         """Parses the dependencies of a rule"""
         result = []
         for dependency in self.dependencies:
-            # Handle escaped '#'
-            if dependency.startswith(r'\#'):
-                dependency = dependency[1:]
-            if is_source_file(dependency) and decompose_filename(dependency)[-1] == "":
-                if (self.containing_dir / dependency).exists():
-                    result.append('$(d)/' + dependency)
+            unescaped = dependency.replace(r'\#', '#')
+            if is_source_file(unescaped) and decompose_filename(unescaped)[-1] == "":
+                if (self.containing_dir / unescaped).exists():
+                    path = '$(d)/' + unescaped
                 else:
                     for include_dir in self.include_dirs:
-                        if (include_dir / dependency).exists():
-                            result.append(str(include_dir / dependency))
+                        if (include_dir / unescaped).exists():
+                            path = str(include_dir / unescaped)
                             break
-                    result.append(dependency)
+                    else:
+                        path = unescaped
+                result.append(path.replace('#', r'\#') if r'\#' in dependency else path)
             else:
                 result.append(dependency)
         return result

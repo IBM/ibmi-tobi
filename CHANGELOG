@@ -1,3 +1,4 @@
+- Added tobi and dollar support for custom commands for .PGM.RPGLE source and PGM targets
 * Mon Aug 17 2026 Het Patel <het.patel@ibm.com> - 3.4.0
 - Resolved build failure by optimizing Rules.mk file scanning to process only referenced files instead of scanning all files globally, using SUBDIRS chain following for improved performance.
 - Fixed false failures for *FILE targets during parallel make -j builds by implementing file locking mechanism using fcntl.flock() for joblog.json to prevent race conditions.
