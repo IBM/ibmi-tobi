@@ -76,3 +76,25 @@ There is no automated test coverage for `def_rules.mk` macro definitions —
    successfully — i.e. the change is a no-op for targets that don't set it.
 5. If a service-program import that previously failed to resolve (per the
    issue) is now resolved successfully, that confirms the fix end-to-end.
+
+### Verification Results
+
+Confirmed against a real-world project (FTPSAUD, a Harris-internal build) that
+had hit this exact bug and was carrying a `POSTCMD` workaround (a raw
+`CRTPGM ... BNDSRVPGM((QICSS/QYCDCUSG)) ...` override) to get around it. With
+the patched `def_rules.mk` deployed to `/QOpenSys/pkgs/lib/tobi/src/mk/`, the
+`POSTCMD` block was replaced with:
+
+```make
+FTPSAUD.PGM: private BNDDIR = FTPSAUD/DCMBNDDIR
+FTPSAUD.PGM: private ACTGRP = *CALLER
+FTPSAUD.PGM: private AUT = *EXCLUDE
+FTPSAUD.PGM: private TEXT = Audit FTPS CA trust configuration
+FTPSAUD.PGM: CERTINV.MODULE DCMAPIS.MODULE FTPSAUD.MODULE
+```
+
+using the project's pre-existing `FTPSAUD/DCMBNDDIR` `*BNDDIR` object (already
+containing a qualified entry for `QICSS/QYCDCUSG`). The build ran successfully
+— `BNDDIR` reached the generated `CRTPGM` command and resolved the import,
+confirming the fix works end-to-end and that `BNDDIR` is a valid, cleaner
+replacement for the raw-command workaround this project had been carrying.
