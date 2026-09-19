@@ -100,3 +100,31 @@ Remaining verification needs a real IBM i system:
    text ending in `... +` with a space), confirm it still continues onto the
    next line correctly — a no-regression check for the (undocumented, but
    possibly relied-upon) continuation feature itself.
+
+### Verification Results
+
+Confirmed on a real IBM i system (TATORPA), building a new `.MSGF`
+pseudo-source target (`QMSGSRC/TEST376.MSGF` in the FTPSAUD project) with
+three `ADDMSGD` entries, then inspecting the result via
+`DSPMSGD RANGE(*ALL) MSGF(FTPSAUD/TEST376)`:
+
+- `USR0001` — `MSG('Press shift+F6.')`, the tight single-line reproduction
+  (no trailing CL parameters after `MSG(...)`, so the `+` is followed only by
+  non-whitespace to end-of-line) — came back exactly as
+  **`Press shift+F6.`**, `+` intact, no corruption or truncation.
+- `USR0002` — the original reporter's exact wording — also came back intact.
+- `USR0003` — a genuine multi-line continuation using the correct `... +`
+  (space before trailing plus) convention — correctly merged across its two
+  physical source lines into one message, confirming no regression to the
+  continuation feature itself.
+
+Also incidentally caught and fixed two unrelated deployment issues during
+this verification:
+- The two patched scripts had picked up CRLF line endings from a Windows
+  git checkout (`core.autocrlf`), which corrupts their shebang line and
+  breaks them entirely on IBM i PASE (`bash: No such file or directory`).
+  Added `src/scripts/* text eol=lf` to `.gitattributes` to force LF
+  regardless of checkout platform.
+- `CRTMSGF`'s `TEXT()` parameter has a 50-character IBM i limit, and
+  `ADDMSGD`'s `MSG()` has its own length ceiling — both had to be shortened
+  in the test fixture. Unrelated to the fix itself.
