@@ -1,6 +1,11 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
+# These are bash scripts run on IBM i PASE -- a CRLF shebang line breaks
+# them there ("bash: No such file or directory"), so force LF regardless
+# of the checkout platform's core.autocrlf setting.
+src/scripts/* text eol=lf
+
 # Custom for Visual Studio
 *.cs     diff=csharp
 
