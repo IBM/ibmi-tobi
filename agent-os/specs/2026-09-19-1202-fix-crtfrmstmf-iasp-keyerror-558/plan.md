@@ -91,3 +91,22 @@ manual:
 4. If available, test on a system with an actual IASP configured
    (`iasp` env var set to a real ASP name) to confirm that path still works
    unchanged.
+
+### Verification Results
+
+Confirmed on a real IBM i system (TATORPA), running `crtfrmstmf` standalone
+from an SSH session (no `iasp` env var set) against a real `*CMD` source
+member from the FTPSAUD project:
+
+```bash
+crtfrmstmf -f /home/SCOTTS/builds/FTPSAUD/QCMDSRC/FTPSAUD.CMD \
+  -o TESTCMD558 -l FTPSAUD -c CRTCMD \
+  -p "PGM(FTPSAUD/FTPSAUD) VLDCKR(*NONE) PMTFILE(*NONE) HLPPNLGRP(FTPSAUD/FTPSAUD) HLPID(FTPSAUD) AUT(*EXCLUDE) TEXT('Test of #558 iasp fix')"
+```
+
+Completed cleanly with no `Traceback`/`KeyError: 'iasp'` — where it
+previously would have crashed immediately on `cli()`'s unconditional
+`env_settings["iasp"]` access. The scratch test object
+(`FTPSAUD/TESTCMD558`) was deleted afterward (`DLTCMD`); the actual
+`makei`-driven build path (which always exports `iasp`, even empty) was
+already unaffected by this bug and remains unchanged.
