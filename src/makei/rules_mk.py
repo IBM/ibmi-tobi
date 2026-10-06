@@ -436,6 +436,9 @@ class RulesMk:
         for rule in rules:
             if rule.is_source_file:
                 source_location = dir_path.joinpath(rule.source_file.rsplit("/", 1)[-1])
+                # .FILE artefacts are binary save files - skip text scanning
+                if source_location.suffix.upper() == ".FILE":
+                    continue
                 is_text_defined = RulesMk._find_source_member_text(source_location)
 
                 # Overrides member text defined in Rules.mk if comment at top of source

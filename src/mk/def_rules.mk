@@ -464,6 +464,8 @@ SRVPGM_TGTRLS := $(TGTRLS)
 SRVPGM_OPTION :=
 SRVPGM_ALWRINZ := $(ALWRINZ)
 WSCST_AUT := $(AUT)
+OVL_DATATYPE := *AFPU
+
 
 # Creation command parameters with variables (the ones listed at the top) for the most common ones.
 CRTCLMODFLAGS = AUT($(AUT)) DBGVIEW($(DBGVIEW)) OPTIMIZE($(OPTIMIZE)) DBGENCKEY($(DBGENCKEY))  OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') TGTRLS($(TGTRLS)) INCDIR($(INCDIR))
@@ -510,6 +512,7 @@ CRTBNDCFLAGS = TGTCCSID($(TGTCCSID)) DBGVIEW($(DBGVIEW)) DBGENCKEY($(DBGENCKEY))
 CRTBNDCLFLAGS = AUT($(AUT)) DBGVIEW($(DBGVIEW)) DBGENCKEY($(DBGENCKEY)) USRPRF($(USRPRF)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') TGTRLS($(TGTRLS)) INCDIR($(INCDIR))
 CRTCLPGMFLAGS = OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') TGTRLS($(TGTRLS)) USRPRF($(USRPRF))
 RUNSQLFLAGS = DBGVIEW(*SOURCE) TGTRLS($(TGTRLS)) OUTPUT(*PRINT) MARGINS(1024) COMMIT($(COMMIT)) DFTRDBCOL($(OBJLIB))
+CRTOVLFLAGS = DATATYPE($(OVL_DATATYPE)) $(if $(TEXT),TEXT('$(subst ','',$(TEXT))'),)
 
 # Extra command string for adhoc addition of extra parameters to a creation command.
 ADHOCCRTFLAGS =
@@ -1352,6 +1355,26 @@ define SQLALIAS_TO_FILE_RECIPE =
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+endef
+
+
+#   ___  __     __ _         ____           _
+#  / _ \ \ \   / /| |       |  _ \ ___  ___(_)_ __   ___  ___
+# | | | | \ \ / / | |       | |_) / _ \/ __| | '_ \ / _ \/ __|
+# | |_| |  \ V /  | |___    |  _ <  __/ (__| | |_) |  __/\__ \
+#  \___/    \_/   |_____|   |_| \_\___|\___| |_.__/ \___||___/
+
+define OVL_VARIABLES =
+	$(eval OVL_DATATYPE = $(OVL_DATATYPE))
+endef
+
+define FILE_TO_OVL_RECIPE =
+	$(OVL_VARIABLES)
+	$(eval d = $($@_d))
+	@$(call echo_cmd,"=== Creating OVL ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) from ['$(notdir $<)']")
+	$(eval crtcmd := $(SCRIPTSPATH)/crtfrmstmf -f $(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,'$<')) -o '$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTOVL" -p $(CRTOVLFLAGS))
+	@$(PRESETUP) \
+	$(SCRIPTSPATH)/crtfrmstmf -f $(call replace_DOLLAR_1,'$<') -o '$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))' -l $(call ESCAPE_FOR_RECIPE,$(OBJLIB)) -c "CRTOVL" -p "$(CRTOVLFLAGS)" --save-joblog "$(JOBLOGFILE)" --precmd="$(PRECMD)" --postcmd="$(POSTCMD)" --output="$(logFile)" > $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 
