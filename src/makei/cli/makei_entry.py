@@ -10,6 +10,7 @@ from makei import __version__
 from makei import init_project
 from makei.build import BuildEnv
 from makei.cvtsrcpf import CvtSrcPf
+from makei.cvtsrcof import CvtSrcOf
 from makei.utils import Colors, colored, escape_special_chars
 from pathlib import Path
 from makei.iproj_json import IProjJson
@@ -29,6 +30,7 @@ def cli():
     add_compile_parser(subparsers)
     add_build_parser(subparsers)
     add_cvtsrcpf_parser(subparsers)
+    add_cvtsrcof_parser(subparsers)
     parser.add_argument(
         '-l', '--log',
         help="log build files and output the make command without executing it; "
@@ -143,6 +145,45 @@ def add_init_parser(subparsers: argparse.ArgumentParser):
     init_parser.add_argument('-c', '--ccsid',
                              help='update target ccsid')
     init_parser.set_defaults(handle=handle_init)
+
+
+def add_cvtsrcof_parser(subparsers: argparse.ArgumentParser):
+    cvtsrcof_parser = subparsers.add_parser(
+        'cvtsrcof',
+        help='migrate an overlay source physical file to an IFS save-file artefact',
+        description='Packages the entire source physical file into a save file (QOVLSAV) '
+                    'and copies it to the IFS as <SRCFILE>.FILE in the current directory. '
+                    'Use this for source files whose members will be compiled with CRTOVL.'
+    )
+
+    cvtsrcof_parser.add_argument(
+        "file",
+        help='the name of the source file',
+        metavar='<file>',
+    )
+
+    cvtsrcof_parser.add_argument(
+        "library",
+        help='the name of the library',
+        metavar='<library>',
+    )
+
+    cvtsrcof_parser.add_argument(
+        "-l",
+        "--tolower",
+        help='The generated source file name will be in lowercase.',
+        action='store_true'
+    )
+
+    cvtsrcof_parser.add_argument(
+        "-t",
+        "--text",
+        help='The generated source file will include the member text as a comment.',
+        action='store_true'
+    )
+
+    cvtsrcof_parser.set_defaults(tolower=False)
+    cvtsrcof_parser.set_defaults(handle=handle_cvtsrcof)
 
 
 def add_cvtsrcpf_parser(subparsers: argparse.ArgumentParser):
@@ -397,7 +438,22 @@ def handle_cvtsrcpf(args):
     if iproj_path.exists():
         iproj = IProjJson.from_file(iproj_path)
         iasp = iproj.iasp
-    CvtSrcPf(args.file, args.library, args.tolower, args.ccsid, args.text, iasp=iasp).run()
+    CvtSrcPf(args.file, args.library, args.tolower, args.ccsid, args.text,
+             iasp=iasp).run()
+
+
+def handle_cvtsrcof(args):
+    """
+    Processing the cvtsrcof command
+    """
+    if args.log:
+        print(colored("Warning: --trace has no effect on 'cvtsrcof' command.", Colors.WARNING))
+    iasp = ""
+    iproj_path = Path.cwd() / "iproj.json"
+    if iproj_path.exists():
+        iproj = IProjJson.from_file(iproj_path)
+        iasp = iproj.iasp
+    CvtSrcOf(args.file, args.library, args.tolower, None, args.text, iasp=iasp).run()
 
 
 def get_override_vars(args):
