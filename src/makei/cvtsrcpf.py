@@ -113,11 +113,10 @@ class CvtSrcPf:
             if self._cvr_src_mbr(src_mbr_name, srcpath, dst_mbr_name, dst_mbr_path):
                 cvt_count += 1
                 if self.store_member_text:
-                    result = self._get_member_text(src_mbr_name, srcpath)
-                    member_text = result[0][0][0]
+                    member_text = self._get_src_mbr_text(src_mbr)
 
                     # If member has text
-                    if member_text is not None:
+                    if member_text:
                         successfulImport = self.import_member_text(dst_mbr_path, member_text)
                         if successfulImport:
                             print("Successfully imported member text!")
@@ -143,6 +142,10 @@ class CvtSrcPf:
         if src_mbr_ext == ".src":
             src_mbr_ext = ".pf"
         return src_mbr_ext
+
+    # Returns the source member's text description
+    def _get_src_mbr_text(self, src_mbr) -> str:
+        return src_mbr[2]
 
     def _get_dst_mbr_name(self, src_mbr_name, src_mbr_ext, tolower: bool) -> str:
         dst_mbr_name = f"{src_mbr_name}.{src_mbr_ext}"
@@ -171,21 +174,18 @@ class CvtSrcPf:
             f"TOSTMF('{dst_mbr_path}') ENDLINFMT(*LF) STMFCCSID(1208) STMFOPT(*REPLACE)",
             ignore_errors=True, log=True)
 
-    def _get_member_text(self, src_mbr_name, srcpath):
-        """Convert the source member
-        """
-        return self.job.run_sql(
-            f"SELECT TEXT_DESCRIPTION FROM TABLE(qsys2.ifs_object_statistics('{srcpath}/{src_mbr_name}.MBR'))",
-            ignore_errors=True, log=False)
-
-    def _get_src_mbrs(self) -> List[Tuple[str, str]]:
+    def _get_src_mbrs(self) -> List[Tuple[str, str, str]]:
         """Get the source members of the source file
+
+        Returns a list of (member name, source type, member text) tuples.
         """
         library = self.lib.upper()
         srcpf = self.srcfile.upper()
         results = self.job.run_sql(
-            f"select SYSTEM_TABLE_MEMBER, SOURCE_TYPE from qsys2.syspartitionstat "
-            f"where SYSTEM_TABLE_SCHEMA='{library}' and SYSTEM_TABLE_NAME='{srcpf}'")
+            f"select SYSTEM_TABLE_MEMBER, SOURCE_TYPE, PARTITION_TEXT from qsys2.syspartitionstat "
+            f"where SYSTEM_TABLE_SCHEMA='{library}' and SYSTEM_TABLE_NAME='{srcpf}' "
+            f"order by SYSTEM_TABLE_MEMBER"
+        )
         if results:
             src_mbrs = []
             for row in results[0]:
@@ -194,7 +194,11 @@ class CvtSrcPf:
                     mbr_type = row[1].strip()
                 else:
                     mbr_type = ''
-                src_mbrs.append((mbr_name, mbr_type))
+                if isinstance(row[2], str):
+                    mbr_text = row[2].strip()
+                else:
+                    mbr_text = ''
+                src_mbrs.append((mbr_name, mbr_type, mbr_text))
             return src_mbrs
         return []
 
