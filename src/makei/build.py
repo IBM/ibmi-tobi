@@ -69,7 +69,7 @@ class BuildEnv:
         self.iproj_json_path = self.src_dir / "iproj.json"
         self.iproj_json = IProjJson.from_file(self.iproj_json_path)
         self.color = support_color()
-        self.iasp = self.iproj_json.iasp
+        self.iasp = os.environ.get("iasp") or self.iproj_json.iasp or ""
         if len(self.iproj_json.set_ibm_i_env_cmd) > 0:
             cmd_list = self.iproj_json.set_ibm_i_env_cmd
             self.ibmi_env_cmds = "\\n".join(cmd_list)

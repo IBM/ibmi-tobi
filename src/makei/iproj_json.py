@@ -98,6 +98,14 @@ class IProjJson:
 
                 tgt_ccsid = with_default_value("tgtCcsid", "*JOB", iproj_json)
                 set_ibm_i_env_cmd = list(map(parse_all_variables, with_default_value("setIBMiEnvCmd", [], iproj_json)))
+                if "iasp" in iproj_json and iproj_json["iasp"]:
+                    print(colored(
+                        "WARNING: 'iasp' in iproj.json is deprecated and no longer supported.\n"
+                        "         Remove 'iasp' from iproj.json and set the environment variable instead:\n"
+                        "           export iasp=<IASP_NAME>\n"
+                        "         or pass it via: makei build -e iasp=<IASP_NAME>",
+                        Colors.WARNING))
+                    sys.exit(1)
                 iasp = parse_all_variables(with_default_value("iasp", DEFAULT_IASP, iproj_json))
                 extensions = with_default_value("extensions", {}, iproj_json)
                 return IProjJson(
