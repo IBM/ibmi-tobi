@@ -415,7 +415,7 @@ def cli():
     handle = CrtFrmStmf(srcstmf_absolute_path, args.object.strip(),
                         args.library.strip(), args.command.strip(), args.rcdlen, args.ccsid,
                         args.parameters, env_settings, args.save_joblog, precmd=args.precmd,
-                        postcmd=args.postcmd, output=args.output, iasp=env_settings["iasp"], dependencies=dependencies)
+                        postcmd=args.postcmd, output=args.output, iasp=env_settings.get("iasp", ""), dependencies=dependencies)
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     success = handle.run()
     print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
