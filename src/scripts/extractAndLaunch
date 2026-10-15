@@ -30,9 +30,13 @@ iasp_prefix="${iasp:+/$iasp}"
 
 # On rebuild, backup the existing object and delete it before recreating.
 obj_backed_up=""
+save_extra=""
+if [ "$obj_ext" = "DTAQ" ]; then
+  save_extra=" QDTA(*DTAQ)"
+fi
 if [ -n "$obj_ibmi_type" ] && [ -e "${iasp_prefix}/QSYS.LIB/$objlib.LIB/$objname.$obj_ext" ]; then
   cl "CRTSAVF FILE(QTEMP/$objlib)"
-  cl "SAVOBJ OBJ($objname) LIB($objlib) DEV(*SAVF) OBJTYPE($obj_ibmi_type) SAVF(QTEMP/$objlib)"
+  cl "SAVOBJ OBJ($objname) LIB($objlib) DEV(*SAVF) OBJTYPE($obj_ibmi_type) SAVF(QTEMP/$objlib)$save_extra"
   cl "DLTOBJ OBJ($objlib/$objname) OBJTYPE($obj_ibmi_type)"
   obj_backed_up="Y"
 fi
@@ -60,7 +64,7 @@ while read -r line; do
       echo "Command failed: $cmd"
       if [ "$obj_backed_up" = "Y" ]; then
         echo "Restoring previous $objlib/$objname..."
-        cl "RSTOBJ OBJ($objname) SAVLIB($objlib) DEV(*SAVF) OBJTYPE($obj_ibmi_type) SAVF(QTEMP/$objlib)"
+        cl "RSTOBJ OBJ($objname) SAVLIB($objlib) DEV(*SAVF) OBJTYPE($obj_ibmi_type) SAVF(QTEMP/$objlib)$save_extra"
       fi
       exit 1
     fi
