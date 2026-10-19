@@ -68,6 +68,8 @@ class MKRule:
         instead of bypassing it entirely.
         """
         if self.target.upper().endswith(".PGM") and len(self.commands) == 3:
+            if re.match(r'^qsh\b', self.commands[1].strip(), re.IGNORECASE):
+                return False
             deps = self._parse_dependencies()
             if deps and deps[0].upper().endswith(".PGM.RPGLE"):
                 return True
