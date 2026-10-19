@@ -10,31 +10,16 @@ if [ ! -z "$IBMiEnvCmd" ] && echo "$IBMiEnvCmd" | grep -qi "SETASPGRP"; then
   done
 fi
 
-# Single pass: detect -c CRTOVL and build a filtered arg list (strips -c and --ccsid pairs).
+# Detect -c CRTOVL to select the Python module.
 PYTHON_MODULE="crtfrmstmf"
-filtered=()
-skip_next=false
+_prev=""
 for arg in "$@"; do
-  # Detect CRTOVL *before* the skip so the value is seen even when -c is being stripped.
   if [ "$_prev" = "-c" ] && [ "$(echo "$arg" | tr '[:lower:]' '[:upper:]')" = "CRTOVL" ]; then
     PYTHON_MODULE="crtovl"
+    break
   fi
-  if $skip_next; then
-    skip_next=false
-    _prev="$arg"
-    continue
-  fi
-  case "$arg" in
-    -c|--ccsid) skip_next=true ;;
-    *) filtered+=("$arg") ;;
-  esac
   _prev="$arg"
 done
 
-if [ "$PYTHON_MODULE" = "crtovl" ]; then
-  pass_args=("${filtered[@]}")
-else
-  pass_args=("$@")
-fi
 PYTHONPATH="${TOBI_DIR}/src":${PYTHONPATH} /QOpenSys/pkgs/bin/python3.9 \
-  "${TOBI_DIR}/src/makei/${PYTHON_MODULE}.py" "${pass_args[@]}"
+  "${TOBI_DIR}/src/makei/${PYTHON_MODULE}.py" "$@"

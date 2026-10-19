@@ -39,12 +39,6 @@ class CrtOvl:
         self.job = IBMJob()
         self.ifs_savf = ifs_savf
         self.ovl = ovl.strip().upper()
-        if len(self.ovl) > 8:
-            raise ValueError(
-                f"Overlay object name '{self.ovl}' is {len(self.ovl)} characters. "
-                f"IBM i *OVL object names are limited to 8 characters. "
-                f"Rename the target in Rules.mk to 8 characters or fewer."
-            )
         self.lib = lib.strip().upper()
         self.parameters = parameters
         self.precmd = precmd or ""
@@ -211,6 +205,17 @@ def cli():
     parser.add_argument(
         '--output',
         metavar='<output>',
+    )
+    parser.add_argument(
+        '-c',
+        '--command',
+        help='Compile command name (accepted for compatibility; not used).',
+        metavar='<cmd>',
+    )
+    parser.add_argument(
+        '--ccsid',
+        help='Source CCSID (accepted for compatibility; not used).',
+        metavar='<ccsid>',
     )
 
     args = parser.parse_args()
