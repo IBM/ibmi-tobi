@@ -1,3 +1,4 @@
+- Added a new recipe to support external SQL procedures and resolve rebuild issues
 - Added tobi and dollar support for custom commands for .PGM.RPGLE source and PGM targets
 - Deprecated `iasp` in `iproj.json` in favour of the `iasp` environment variable.
 * Mon Aug 17 2026 Het Patel <het.patel@ibm.com> - 3.4.0

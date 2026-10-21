@@ -53,6 +53,9 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 define logSuccess =
 $(call echo_success_cmd,"'$1' was created successfully!")
 endef
+define logRegistered =
+$(call echo_success_cmd,"'$1' was registered successfully!")
+endef
 define logFail =
 $(call echo_error_cmd,"Failed to create '$1'!")
 endef
@@ -1571,6 +1574,16 @@ define SQLPRC_TO_PGM_RECIPE =
 	@$(PRESETUP) \
 	$(SETCURLIBTOOBJLIB) \
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+endef
+
+define SQLPRC_TO_SQLPRC_RECIPE =
+	$(PGM_VARIABLES)
+	@$(call echo_cmd,"=== Registering external SQL PROCEDURE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
+	$(eval tempFile := $(shell mktemp))
+	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
+	@$(PRESETUP) \
+	$(SETCURLIBTOOBJLIB) \
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logRegistered,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
 define SQLTRG_TO_PGM_RECIPE =

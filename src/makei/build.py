@@ -8,7 +8,7 @@ import os
 import time
 from pathlib import Path
 from tempfile import mkstemp
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from makei.const import TOBI_PATH, MK_PATH, TARGET_TARGETGROUPS_MAPPING
 from makei.ibmi_json import IBMiJson
@@ -16,6 +16,9 @@ from makei.iproj_json import IProjJson
 from makei.rules_mk import RulesMk
 from makei.utils import objlib_to_path, \
     run_command, support_color, print_to_stdout, Colors, colored, get_target_patterns_for_makefile, escape_special_chars
+
+if TYPE_CHECKING:
+    from makei.ibm_job import IBMJob
 
 
 class BuildEnv:
@@ -144,11 +147,65 @@ class BuildEnv:
         """Check if text contains special characters or their escape sequences."""
         return any(char in text for char in ('$', '#', 'DOLLARESCAPE_', 'HASHESCAPE_', '\\#'))
 
+    # Lazily-created IBMJob, reused for all SQLPRC timestamp checks in one build.
+    _ibm_job: Optional['IBMJob'] = None
+
+    def _get_ibm_job(self) -> Optional['IBMJob']:
+        """Return a cached IBMJob, creating it on first call. Returns None if unavailable."""
+        if BuildEnv._ibm_job is None:
+            try:
+                from makei.ibm_job import IBMJob
+                BuildEnv._ibm_job = IBMJob()
+            except Exception:
+                return None
+        return BuildEnv._ibm_job
+
+    def _check_sqlprc_needs_rebuild(self, rule, objlib_path: Path, source_str: str, target_unescaped: str) -> bool:
+        """Check if a SQL stored procedure needs rebuild by querying QSYS2.SYSROUTINES.
+        Returns True if rebuild is needed, False if up to date.
+
+        Uses COALESCE(LAST_ALTERED, ROUTINE_CREATED) so it works for both:
+        - SQL (LANGUAGE SQL) procedures where LAST_ALTERED is populated on recompile.
+        - EXTERNAL procedures where LAST_ALTERED is always NULL; ROUTINE_CREATED is used.
+        """
+        proc_name = target_unescaped.split('.')[0].upper()
+        objlib = objlib_path.name.replace('.LIB', '').upper()
+
+        job = self._get_ibm_job()
+        if job is None:
+            return True
+
+        result = job.run_sql(
+            "SELECT COALESCE(LAST_ALTERED, ROUTINE_CREATED) "
+            "FROM QSYS2.SYSROUTINES "
+            f"WHERE ROUTINE_SCHEMA='{objlib}' AND SPECIFIC_NAME='{proc_name}'",
+            ignore_errors=True
+        )
+
+        # No result or empty → procedure not yet registered → rebuild needed
+        if not result or not result[0]:
+            return True
+        proc_timestamp = result[0][0][0].replace(tzinfo=None)
+
+        # Procedure exists — rebuild only if source is newer than the procedure timestamp
+        source_path = (Path(source_str) if Path(source_str).is_absolute()
+                       else rule.containing_dir / source_str if rule.is_source_file
+                       else objlib_path / source_str)
+        if not source_path.exists():
+            return False
+        try:
+            source_mtime = datetime.fromtimestamp(source_path.stat().st_mtime)
+            return source_mtime > proc_timestamp
+        except Exception:
+            return True
+
     def _check_target_needs_rebuild(self, rule, objlib_path: Path) -> bool:
         """Check if target needs rebuild based on timestamp comparison."""
         # Unescape source and target names using helper
         source_str = self._unescape_special_chars(rule.source_file.replace('$(d)/', '', 1))
         target_unescaped = self._unescape_special_chars(rule.target)
+        if rule.target.upper().endswith('.SQLPRC'):
+            return self._check_sqlprc_needs_rebuild(rule, objlib_path, source_str, target_unescaped)
         target_path = objlib_path / target_unescaped
         # Determine source path (QSYS for objects, source dir for files)
         source_path = (Path(source_str) if Path(source_str).is_absolute()
@@ -339,6 +396,9 @@ class BuildEnv:
                         # Special char file: Python checks timestamp
                         needs_rebuild = self._check_target_needs_rebuild(rule, objlib_path)
                         special_char_files[escaped_target] = needs_rebuild
+                    elif rule.target.upper().endswith('.SQLPRC'):
+                        needs_rebuild = self._check_target_needs_rebuild(rule, objlib_path)
+                        special_char_files[escaped_target] = needs_rebuild
                     # Add to all_rules after validation (only if source exists or not special char)
                     all_rules.append((rule, objlib_path, escaped_target))
             # Check transitive dependencies
@@ -443,6 +503,8 @@ OBJECT_TARGET_PATTERNS := {target_patterns}
             if "Failed to create" in line:
                 self.failed_targets.append(line.split()[-1].split("!")[0])
             if "was created successfully!" in line:
+                self.success_targets.append(line.split()[1])
+            if "was registered successfully!" in line:
                 self.success_targets.append(line.split()[1])
             if "End of creating" in line:
                 self.success_targets.append(line.split()[-1].split("!")[0])

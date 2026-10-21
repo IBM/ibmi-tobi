@@ -160,7 +160,11 @@ class MKRule:
                 recipe_name = "DSPF_TO_FILE_RECIPE"
             elif target_type in ("SQL", "MSGF"):
                 recipe_name = f"{target_type}_RECIPE"
-            elif target_type in ("PGM") and source_file in ("RPGLE", "SQLRPGLE"):
+            elif source_file == "SQLPRC" and target_type == "SQLPRC":
+                recipe_name = "SQLPRC_TO_SQLPRC_RECIPE"
+            elif source_file == "SQLPRC" and target_type == "PGM":
+                recipe_name = "SQLPRC_TO_PGM_RECIPE"
+            elif target_type in ("PGM") and source_file in ("RPGLE", "SQLRPGLE", "CLLE"):
                 recipe_name = target_type + '.' + source_file + '_TO_' + self.target.split(".")[
                     -1].upper() + '_RECIPE'
             else:
