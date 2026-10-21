@@ -438,8 +438,7 @@ def handle_cvtsrcpf(args):
     if iproj_path.exists():
         iproj = IProjJson.from_file(iproj_path)
         iasp = iproj.iasp
-    CvtSrcPf(args.file, args.library, args.tolower, args.ccsid, args.text,
-             iasp=iasp).run()
+    CvtSrcPf(args.file, args.library, args.tolower, args.ccsid, args.text, iasp=iasp).run()
 
 
 def handle_cvtsrcof(args):

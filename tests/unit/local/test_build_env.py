@@ -81,3 +81,19 @@ def test_build_env_with_targets_and_options(set_test_directory):
     finally:
         if build_env:
             build_env._post_make()
+
+
+@pytest.mark.parametrize("set_test_directory", ["sample_project1"], indirect=True)
+def test_build_env_with_iasp_env_var(set_test_directory):
+    os.environ["iasp"] = "IASP1"
+    try:
+        build_env = BuildEnv()
+        assert build_env.iasp == "IASP1"
+        with open(build_env.build_vars_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            assert "iasp := IASP1" in content
+            assert "/IASP1/QSYS.LIB/" in content
+    finally:
+        os.environ.pop("iasp", None)
+        if build_env:
+            build_env._post_make()

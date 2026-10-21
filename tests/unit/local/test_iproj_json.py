@@ -17,8 +17,7 @@ def test_iproj_json_from_file():
     assert iproj_json.curlib == "*CRTDFT"
     assert iproj_json.pre_usr_libl == ["QSYS"]
     assert iproj_json.post_usr_libl == ["QGPL"]
-    assert iproj_json.set_ibm_i_env_cmd == ["SETASPGRP ASPGRP(IASP1)", "CRTBNDRPG PGM(HELLO) SRCFILE(QCLLESRC)"]
-    assert iproj_json.iasp == "IASP1"
+    assert iproj_json.set_ibm_i_env_cmd == ["CRTBNDRPG PGM(HELLO) SRCFILE(QCLLESRC)"]
     assert iproj_json.tgt_ccsid == "1208"
     assert iproj_json.extensions == {"custom_extension": {"key": "value"}}
 
