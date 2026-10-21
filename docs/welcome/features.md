@@ -137,6 +137,32 @@ The set of SQL commands to create the object is stored in a file with the given 
 
 Generic SQL statements with file extension .SQL are executed using RUNSQLSTM
 
+### SQL procedures (.SQLPRC)
+
+A `.SQLPRC` source file can be built in two ways. Which one you get depends on the target in `Rules.mk`.
+
+| Procedure kind                | Rules.mk entry                  | What happens                                                                      |
+| :---------------------------- | :------------------------------ | :-------------------------------------------------------------------------------- |
+| Internal      | `MYPROC.PGM: myproc.sqlprc`     | Runs the `CREATE OR REPLACE PROCEDURE` and creates a `*PGM` object.                |
+| External | `EXTPROC.SQLPRC: extproc.sqlprc`| Runs the statement to register the procedure in `QSYS2.SYSROUTINES`. No `*PGM` is created. |
+
+If your `.SQLPRC` is an external procedure, use as below 
+
+`EXTPROC.SQLPRC: extproc.sqlprc`.
+
+Examples:
+
+```make
+# Internal SQL procedure -> creates *PGM
+MYPROC.PGM: myproc.sqlprc
+
+# External SQL procedure -> registered only
+EXTPROC.SQLPRC: extproc.sqlprc
+```
+
+The build log shows `Creating SQL PROCEDURE ...` for internal procedures and `Registering external SQL PROCEDURE ...` for external ones.
+
+
 ### TEXT Parameter for SQL Objects
 
 When creating SQL objects (TABLE, PFSQL, etc.), the object text description is determined by:
@@ -159,4 +185,21 @@ incremental {
 }
 
 CREATE OR REPLACE TABLE ...
+```
+
+## IASP Support
+
+TOBi supports building objects into an Independent Auxiliary Storage Pool (IASP). Set the `iasp` environment variable before running any build or compile command — no changes to `iproj.json` are needed. TOBi automatically calls `SETASPGRP` for the job when `iasp` is set.
+
+**Export in your PASE session:**
+
+```bash
+export iasp=IASP1
+makei build
+```
+
+**Pass inline with the `-e` flag:**
+
+```bash
+makei build -e iasp=IASP1
 ```

@@ -53,6 +53,9 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 define logSuccess =
 $(call echo_success_cmd,"'$1' was created successfully!")
 endef
+define logRegistered =
+$(call echo_success_cmd,"'$1' was registered successfully!")
+endef
 define logFail =
 $(call echo_error_cmd,"Failed to create '$1'!")
 endef
@@ -124,6 +127,9 @@ COMPILEOPT :=
 endif
 ifndef CURLIB
 CURLIB :=
+endif
+ifndef iasp
+iasp :=
 endif
 ifndef DBGVIEW
 DBGVIEW := *ALL
@@ -1570,6 +1576,16 @@ define SQLPRC_TO_PGM_RECIPE =
 	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "$(mbrtextcmd)" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
 endef
 
+define SQLPRC_TO_SQLPRC_RECIPE =
+	$(PGM_VARIABLES)
+	@$(call echo_cmd,"=== Registering external SQL PROCEDURE $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
+	$(eval tempFile := $(shell mktemp))
+	$(eval crtcmd := RUNSQLSTM srcstmf('$(tempFile)') $(RUNSQLFLAGS))
+	@$(PRESETUP) \
+	$(SETCURLIBTOOBJLIB) \
+	$(SCRIPTSPATH)/extractPseudoSQLAndLaunch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call REPLACE_TO_SLASH,$(call replace_DOLLAR_ESCAPE,$<))" $(logFile) "" "$(VPATH)" "$(tempFile)"> $(logFile) 2>&1 && $(call logRegistered,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
+endef
+
 define SQLTRG_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
 	@$(call echo_cmd,"=== Creating SQL TRIGGER $(call ESCAPE_FOR_RECIPE,$(OBJLIB))/'$(basename $(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(notdir $@))))' from Sql statement ['$(notdir $<)']")
@@ -1585,11 +1601,12 @@ endef
 define PGM.RPGLE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)
 	@$(call echo_cmd,"=== Creating Bound RPG Program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(basename $(@F))))'] in $(call ESCAPE_FOR_RECIPE,$(OBJLIB))")
-	$(eval crtcmd := CRTBNDRPG srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) $(CRTBNDRPGFLAGS))
+	$(eval crtcmd := $(if $($@_CRTCMD),$(call ESCAPE_FOR_RECIPE,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE,$($@_CRTCMD)))),CRTBNDRPG srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') PGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) $(CRTBNDRPGFLAGS)))
 	@$(PRESETUP) \
 	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
-	@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $@)).PGM.evfevent)
+	$(if $($@_CRTCMD),,@$(call EVFEVENT_DOWNLOAD,$(call REPLACE_TO_HASH,$(basename $@)).PGM.evfevent))
 endef
+
 
 define PGM.SQLRPGLE_TO_PGM_RECIPE =
 	$(PGM_VARIABLES)

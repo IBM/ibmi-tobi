@@ -153,7 +153,7 @@ FILE_TARGET_MAPPING = {
     "DTAARA": {"DTAARA"},
     "DTAQ": {"DTAQ"},
     "SYSTRG": {"TRG"},
-    "SQLPRC": {"PGM"},
+    "SQLPRC": {"PGM", "SQLPRC"},
     "TABLE": {"FILE"},
     "PFSQL": {"FILE"},
     "VIEW": {"FILE"},
