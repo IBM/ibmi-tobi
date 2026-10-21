@@ -448,11 +448,12 @@ def handle_cvtsrcof(args):
     """
     if args.log:
         print(colored("Warning: --trace has no effect on 'cvtsrcof' command.", Colors.WARNING))
-    iasp = ""
-    iproj_path = Path.cwd() / "iproj.json"
-    if iproj_path.exists():
-        iproj = IProjJson.from_file(iproj_path)
-        iasp = iproj.iasp
+    iasp = os.environ.get("iasp") or ""
+    if not iasp:
+        iproj_path = Path.cwd() / "iproj.json"
+        if iproj_path.exists():
+            iproj = IProjJson.from_file(iproj_path)
+            iasp = iproj.iasp
     CvtSrcOf(args.file, args.library, args.tolower, None, args.text, iasp=iasp).run()
 
 

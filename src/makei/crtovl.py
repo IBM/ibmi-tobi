@@ -230,7 +230,7 @@ def cli():
     if 'IBMiEnvCmd' in os.environ:
         env_settings['IBMiEnvCmd'] = os.environ['IBMiEnvCmd']
     if 'iasp' in os.environ:
-        env_settings['iasp'] = _sanitize_lib(os.environ['iasp'])
+        env_settings['iasp'] = os.environ['iasp']
 
     handle = CrtOvl(
         ifs_savf=ifs_savf,
