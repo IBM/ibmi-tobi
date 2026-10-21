@@ -392,11 +392,12 @@ def handle_cvtsrcpf(args):
     """
     if args.log:
         print(colored("Warning: --trace has no effect on 'cvtsrcpf' command.", Colors.WARNING))
-    iasp = ""
-    iproj_path = Path.cwd() / "iproj.json"
-    if iproj_path.exists():
-        iproj = IProjJson.from_file(iproj_path)
-        iasp = iproj.iasp
+    iasp = os.environ.get("iasp") or ""
+    if not iasp:
+        iproj_path = Path.cwd() / "iproj.json"
+        if iproj_path.exists():
+            iproj = IProjJson.from_file(iproj_path)
+            iasp = iproj.iasp
     CvtSrcPf(args.file, args.library, args.tolower, args.ccsid, args.text, iasp=iasp).run()
 
 

@@ -160,3 +160,20 @@ incremental {
 
 CREATE OR REPLACE TABLE ...
 ```
+
+## IASP Support
+
+TOBi supports building objects into an Independent Auxiliary Storage Pool (IASP). Set the `iasp` environment variable before running any build or compile command — no changes to `iproj.json` are needed. TOBi automatically calls `SETASPGRP` for the job when `iasp` is set.
+
+**Export in your PASE session:**
+
+```bash
+export iasp=IASP1
+makei build
+```
+
+**Pass inline with the `-e` flag:**
+
+```bash
+makei build -e iasp=IASP1
+```

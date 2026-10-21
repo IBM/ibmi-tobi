@@ -80,25 +80,20 @@ license for this project
 
 The Independent Auxiliary Storage Pool that should be used when developing this project. If not specified, it is assumed to be "*SYSBAS".
 
->[!IMPORTANT]
->**IASP Configuration Requirements:**
+>[!WARNING]
+>**Deprecated: `iasp` in `iproj.json`**
 >
-> When working with an IASP, you must configure **both** of the following in your `iproj.json`:
+> Configuring `iasp` directly in `iproj.json` is **deprecated and no longer supported**. If `iasp` is present in `iproj.json`, the build will stop with a warning message. Use the `iasp` environment variable instead.
 >
-> 1. **Set the `iasp` field** to your IASP name (e.g., `"iasp": "IASP1"`)
-> 2. **Set the `setIBMiEnvCmd` field** to include the `SETASPGRP` command and export `CURLIB` as your IASP library
->
-> **Example IASP configuration:**
+> Previously, `iasp` and `SETASPGRP` were both configured in `iproj.json`:
 > ```json
 > {
 >   "iasp": "IASP1",
 >   "curlib": "MYLIB",
->   "setIBMiEnvCmd": [
->     "SETASPGRP ASPGRP(IASP1)"]
+>   "setIBMiEnvCmd": ["SETASPGRP ASPGRP(IASP1)"]
 > }
 > ```
->
-> Without both settings, TOBi will not be able to properly access libraries and objects in the IASP.
+> Neither is needed anymore. Remove `iasp` from `iproj.json` and remove the `SETASPGRP` entry from `setIBMiEnvCmd` — TOBi handles `SETASPGRP` automatically when the `iasp` environment variable is set.
 
 ### sql
 
