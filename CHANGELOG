@@ -1,3 +1,4 @@
+- Fixed external service program binding order and added `BNDDIR` support to `CRTPGMFLAGS`
 - Fixed rebuild issue for DTAARA , DTAQ and MSGF objects
 - Added a new recipe to support external SQL procedures and resolve rebuild issues
 - Added tobi and dollar support for custom commands for .PGM.RPGLE source and PGM targets

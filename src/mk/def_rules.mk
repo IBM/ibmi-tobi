@@ -484,7 +484,7 @@ CRTDSPFFLAGS = ENHDSP($(ENHDSP)) RSTDSP($(RSTDSP)) DFRWRT($(DFRWRT)) AUT($(AUT))
 CRTLFFLAGS = AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') $(if $(MBR),MBR($(MBR)),)
 CRTMNUFLAGS = AUT($(AUT)) OPTION($(OPTION)) CURLIB($(CURLIB)) PRDLIB($(PRDLIB)) TEXT('$(subst ','',$(TEXT))') TYPE($(TYPE))
 CRTPFFLAGS = AUT($(AUT)) DLTPCT($(DLTPCT)) OPTION($(OPTION)) REUSEDLT($(REUSEDLT)) SIZE($(SIZE)) ALWUPD($(PF_ALWUPD)) TEXT('$(subst ','',$(TEXT))') $(if $(MBR),MBR($(MBR)),)
-CRTPGMFLAGS = ACTGRP($(ACTGRP)) ALWUPD($(ALWUPD)) USRPRF($(USRPRF)) TGTRLS($(TGTRLS)) AUT($(AUT)) DETAIL($(DETAIL)) OPTION($(CRTPGM_OPTION)) STGMDL($(STGMDL)) TEXT('$(subst ','',$(TEXT))') ALWRINZ($(ALWRINZ))
+CRTPGMFLAGS = ACTGRP($(ACTGRP)) ALWUPD($(ALWUPD)) USRPRF($(USRPRF)) TGTRLS($(TGTRLS)) AUT($(AUT)) DETAIL($(DETAIL)) OPTION($(CRTPGM_OPTION)) STGMDL($(STGMDL)) TEXT('$(subst ','',$(TEXT))') ALWRINZ($(ALWRINZ)) $(if $(BNDDIR),BNDDIR($(call ESCAPE_FOR_SLASH,$(call replace_DOLLARESCAPE,$(BNDDIR)))),)
 CRTPNLGRPFLAGS = AUT($(AUT)) OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))')
 CRTRPGPGMFLAGS = OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') USRPRF($(USRPRF)) TGTRLS($(TGTRLS))
 CRTSQLRPGFLAGS = OPTION($(OPTION)) TEXT('$(subst ','',$(TEXT))') USRPRF($(USRPRF)) TGTRLS($(TGTRLS))
@@ -1702,9 +1702,9 @@ define ILEPGM_TO_PGM_RECIPE =
 endef
 
 define MODULE_TO_PGM_RECIPE =
+	$(eval externalsrvpgms := $(filter %.SRVPGM,$(subst .LIB,,$(subst /QSYS.LIB/,,$|))))
 	$(PGM_VARIABLES)
 	@$(call echo_cmd,"=== Creating program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(tgt)))'] from modules ['$(call REPLACE_TO_HASH,$(basename $(filter %.MODULE,$(call replace_DOLLARESCAPE_2,$(notdir $^)))))'] and service programs ['$(call REPLACE_TO_HASH,$(basename $(filter %.SRVPGM,$(call replace_DOLLARESCAPE_2,$(notdir $^$|)))))']")
-	$(eval externalsrvpgms := $(filter %.SRVPGM,$(subst .LIB,,$(subst /QSYS.LIB/,,$|))))
 	$(eval crtcmd := crtpgm pgm($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) module($(call ESCAPE_FOR_SLASH,$(call REPLACE_TO_HASH,$(basename $(filter %.MODULE,$(call replace_DOLLARESCAPE,$(notdir $^))))))) bndsrvpgm($(if $(BNDSRVPGMPATH),$(BNDSRVPGMPATH),*NONE)) $(CRTPGMFLAGS))
 	@$(PRESETUP) \
 	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_HASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
@@ -1768,10 +1768,10 @@ define SQLUDF_TO_SRVPGM_RECIPE =
 endef
 
 define BND_TO_SRVPGM_RECIPE =
+	$(eval externalsrvpgms := $(filter %.SRVPGM,$(subst .LIB,,$(subst /QSYS.LIB/,,$|))))
 	$(SRVPGM_VARIABLES)
 	$(eval d = $($@_d))
 	@$(call echo_cmd,"=== Creating service program ['$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$(tgt)))'] from modules ['$(call REPLACE_TO_HASH,$(basename $(filter %.MODULE,$(call replace_DOLLARESCAPE_2,$(notdir $^)))))'] and service programs ['$(call REPLACE_TO_HASH,$(basename $(filter %.SRVPGM,$(call replace_DOLLARESCAPE_2,$(notdir $^$|))))')]")
-	$(eval externalsrvpgms := $(filter %.SRVPGM,$(subst .LIB,,$(subst /QSYS.LIB/,,$|))))
 	$(eval crtcmd := CRTSRVPGM srcstmf('$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))') SRVPGM($(call ESCAPE_FOR_RECIPE,$(OBJLIB))/$(call REPLACE_TO_SLASH,$(call replace_DOLLARESCAPE,$(basename $(@F))))) module($(call ESCAPE_FOR_SLASH,$(call REPLACE_TO_HASH,$(basename $(filter %.MODULE,$(call replace_DOLLARESCAPE,$(notdir $^))))))) BNDSRVPGM($(if $(BNDSRVPGMPATH),$(BNDSRVPGMPATH),*NONE)) $(CRTSRVPGMFLAGS))
 	@$(PRESETUP) \
 	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" "$(PRECMD)" "$(POSTCMD)" "$(notdir $@)" "$(call ESCAPE_FOR_SLASH,$(call replace_DOLLAR_2,$<))" "$(logFile)"> $(logFile) 2>&1 && $(call logSuccess,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@))) || $(call logFail,$(call REPLACE_TO_HASH,$(call replace_DOLLARESCAPE_2,$@)))
