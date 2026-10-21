@@ -1766,17 +1766,6 @@ DOLLARDOLLARESCAPE_.MODULE_RECIPE=RPGLE_TO_MODULE_RECIPE
 
 
 def test_custom_recipe_with_dollar():
-    """Rules with custom commands where the target and dependency contain $ signs.
-
-    Rules.mk:
-        ORD$$$700.PGM: ord$$700.pgm.rpgle
-            cl "ADDLIBLE LIB(TOBI$$TST) POSITION(*FIRST)"
-            cl "ADDLIBLE LIB(WCA4IBOB) POSITION(*FIRST)"
-
-    Two user commands → NOT routed through _is_single_cmd_pgm_rpgle (commands len == 4,
-    not 3).  Falls into the generic CUSTOM_RECIPE path; $ signs in the target and in the
-    cl arguments must be correctly escaped in the emitted Make output.
-    """
     rules_mk = RulesMk.from_file(data_dir / "dollar_custom.rules.mk", data_dir)
 
     expected_targets = {
@@ -1841,16 +1830,6 @@ def test_custom_recipe_with_dollar():
 
 
 def test_single_cmd_pgm_rpgle_recipe():
-    """Single custom command for a .pgm.rpgle → .PGM rule is routed to the
-    standard PGM.RPGLE_TO_PGM_RECIPE flow via _is_single_cmd_pgm_rpgle.
-
-    Rules.mk:
-        ORD700.PGM: ord700.pgm.rpgle
-            cl "ADDLIBLE LIB(TOBITEST) POSITION(*FIRST)"
-
-    The sole user command is extracted as _CRTCMD (quotes stripped), and the
-    rule emits _SRC / _DEP / _RECIPE instead of _CUSTOM_RECIPE.
-    """
     rules_mk = RulesMk.from_file(data_dir / "single_cmd_pgm.rules.mk", data_dir)
 
     expected_targets = {

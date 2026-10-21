@@ -66,6 +66,8 @@ class MKRule:
         whose first dependency is an RPGLE source file.  In that case the sole user
         command is used as the crtcmd inside the standard PGM.RPGLE_TO_PGM_RECIPE flow
         instead of bypassing it entirely.
+        Custom command that starts with ``qsh`` are excluded, as they invoke shell
+        commands rather than CL commands.
         """
         if self.target.upper().endswith(".PGM") and len(self.commands) == 3:
             if re.match(r'^qsh\b', self.commands[1].strip(), re.IGNORECASE):
@@ -120,11 +122,11 @@ class MKRule:
 
             def escape_cmd_dollar(s: str) -> str:
                 return re.sub(r'\$(?!\()', '\\$$', s)
-            escaped_recipe_deps = ' '.join(encode_dollar(d) for d in self._parse_dependencies())
 
             def escape_dollar_for_recipe(s: str) -> str:
                 return re.sub(r'\$(?!\()', '$$', s)
 
+            escaped_recipe_deps = ' '.join(encode_dollar(d) for d in self._parse_dependencies())
             cmd_lines = []
             has_bare_dollar = re.compile(r'\$(?!\()')
             for cmd in self.commands:
