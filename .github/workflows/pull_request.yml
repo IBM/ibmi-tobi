@@ -162,21 +162,20 @@ jobs:
             --cmd "git clone https://github.com/IBM/${{ matrix.project.name }}.git ../${{ matrix.project.name }}_iasp" \
             --rcwd "../${{ matrix.project.name }}_iasp" \
             --cmd "git switch ${{ matrix.project.branch }}" \
-            --cmd "node -e \"const fs=require('fs'); const j=JSON.parse(fs.readFileSync('iproj.json','utf8')); j.iasp='${{ matrix.project.iasp }}'; j.setIBMiEnvCmd=['SETASPGRP ASPGRP(${{ matrix.project.iasp }})']; fs.writeFileSync('iproj.json',JSON.stringify(j,null,2));\"" \
             --cmd "echo Full build under IASP..." \
-            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei b -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) | tee firstBuild.log" \
+            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei b -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) -e iasp=${{ matrix.project.iasp }} | tee firstBuild.log" \
             --cmd "grep '${{ matrix.project.firstBuild }}' firstBuild.log || { echo 'First build of ${{ matrix.project.firstBuild }} failed!'; exit 1; }" \
             --cmd "echo Touch one file and full build..." \
             --cmd "touch ${{ matrix.project.directory }}/${{ matrix.project.file }}" \
-            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei b -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) | tee secondBuild.log" \
+            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei b -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) -e iasp=${{ matrix.project.iasp }} | tee secondBuild.log" \
             --cmd "grep '${{ matrix.project.secondBuild }}' secondBuild.log || { echo 'Second build of ${{ matrix.project.secondBuild }} failed!'; exit 1; }" \
             --cmd "echo Touch one file and compile it..." \
             --cmd "touch ${{ matrix.project.directory }}/${{ matrix.project.file }}" \
-            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei c -f ${{ matrix.project.directory }}/${{ matrix.project.file }} -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) | tee firstCompile.log" \
+            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei c -f ${{ matrix.project.directory }}/${{ matrix.project.file }} -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) -e iasp=${{ matrix.project.iasp }} | tee firstCompile.log" \
             --cmd "grep '${{ matrix.project.firstCompile }}' firstCompile.log || { echo 'First compile of ${{ matrix.project.firstCompile }} failed!'; exit 1; }" \
             --cmd "echo Touch one file and compile directory..." \
             --cmd "touch ${{ matrix.project.directory }}/${{ matrix.project.file }}" \
-            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei c -f ${{ matrix.project.directory }} -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) | tee secondCompile.log" \
+            --cmd "cl 'SETASPGRP ASPGRP(${{ matrix.project.iasp }})' && ../ibmi_tobi_iasp/bin/makei c -f ${{ matrix.project.directory }} -e ${{ matrix.project.lib }}=$(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP) -e iasp=${{ matrix.project.iasp }} | tee secondCompile.log" \
             --cmd "grep '${{ matrix.project.secondCompile }}' secondCompile.log || { echo 'Second compile of ${{ matrix.project.secondCompile }} failed!'; exit 1; }" \
             --cmd "echo Clean up..." \
             --ignore --cl "DLTLIB LIB($(so -bl ${GITHUB_HEAD_REF}_${{ matrix.project.name }}_IASP)) ASPDEV(${{ matrix.project.iasp }})" \

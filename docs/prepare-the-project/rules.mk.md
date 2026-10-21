@@ -247,6 +247,32 @@ SA$MPLE.MODULE: SA$MPLE.RPGLE
 SA$MPLE.PGM: SA$MPLE.MODULE
 ```
 
+### Using $ Names in Custom Commands
+
+When a custom command passes a name that contains `$` as a plain argument, such as `liblist -a`, put the name in single quotes. This applies to `$` only.
+
+```text
+SAMPLE$12.FILE: sample$12.pf
+	qsh -c "liblist -a 'TOBI$TEST'"
+```
+
+
+When the library name is passed as a parameter such as `LIB(...)`, the single quotes are not needed:
+
+```text
+ORD\#700.FILE: ord\#700.pf
+	cl "ADDLIBLE LIB(TOBI$TEST) POSITION(*FIRST)"
+```
+
+### Compiling Sources with # or $ in the Name
+
+When you compile a source file whose name contains `#` or `$` with `makei compile` (or `makei c`), put the file name in single quotes so the shell passes it through unchanged.
+
+```bash
+makei c -f 'SA$MPLE.RPGLE'
+makei c -f 'SA#MPLE.RPGLE'
+```
+
 ## Further reading
 
 To learn more about makefile syntax, see the official [GNU Make documentation](https://www.gnu.org/software/make/manual/make.html).  Just remember that every object referenced in a TOBi makefile must have an IFS file suffix (`.PGM`, `.FILE`, etc.) and be written in upper case.
