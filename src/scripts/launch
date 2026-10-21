@@ -46,6 +46,11 @@ if [ ! -z "$IBMiEnvCmd" ]; then
   done
 fi
 
+iasp_name="${iasp:-$IASP}"
+if [ ! -z "$iasp_name" ] && ! echo "$IBMiEnvCmd" | grep -qi "SETASPGRP"; then
+  cl "SETASPGRP ASPGRP($iasp_name)"
+fi
+
 unset IFS
 
 [[ ! -z "$curlib" ]] && liblist -c "$curlib"

@@ -4,9 +4,17 @@ SCRIPT_DIR="$(dirname "$0")"
 TOBI_DIR=$(realpath "${SCRIPT_DIR}/../..")
 IFS=$'\\n'
 echo "$IBMiEnvCmd"
-if [ ! -z "$IBMiEnvCmd" ] && echo "$IBMiEnvCmd" | grep -qi "SETASPGRP"; then
+if [ ! -z "$IBMiEnvCmd" ]; then
   for envcmd in $IBMiEnvCmd; do
     [[ ! -z "$envcmd" ]] && cl "$envcmd"
   done
 fi
+
+iasp_name="${iasp:-$IASP}"
+if [ ! -z "$iasp_name" ] && ! echo "$IBMiEnvCmd" | grep -qi "SETASPGRP"; then
+  cl "SETASPGRP ASPGRP($iasp_name)"
+fi
+
+unset IFS
+
 PYTHONPATH="${TOBI_DIR}/src":${PYTHONPATH} /QOpenSys/pkgs/bin/python3.9 "${TOBI_DIR}/src/makei/crtfrmstmf.py" "$@"

@@ -125,6 +125,9 @@ endif
 ifndef CURLIB
 CURLIB :=
 endif
+ifndef iasp
+iasp :=
+endif
 ifndef DBGVIEW
 DBGVIEW := *ALL
 endif
