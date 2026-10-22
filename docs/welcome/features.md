@@ -29,7 +29,7 @@ These IBM i source types can be compiled directly from the IFS
 | :---------- | :-------------------------------------------------------------------- |
 | *CMD        | .CMD                                                                  |
 | *MODULE     | .RPGLE, .CLLE, .C, .SQLC, .CPP, .SQLCPP, .SQLRPGLE, .CBLLE, .SQLCBLLE |
-| *PGM        | .PGM.RPGLE, .PGM.SQLRPGLE, .PGM.C, .PGM.CBLLE, .PGM.SQLCBLLE, .RPGLE, .SQLRPGLE          |
+| *PGM        | .PGM.RPGLE, .PGM.SQLRPGLE, .PGM.C, .PGM.CBLLE, .PGM.SQLCBLLE, .RPGLE, .SQLRPGLE, .PGM.CLLE, .CLLE          |
 | *SRVPGM     | .BND                                                                  |
 
 Note:
