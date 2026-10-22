@@ -1,3 +1,4 @@
+- Changed default line endings for `src/scripts` and `bin` from CRLF to LF
 - Added support for building `PGM` objects from both `.clle` and `.pgm.clle` source files
 - Fixed external service program binding order and added `BNDDIR` support to `CRTPGMFLAGS`
 - Fixed rebuild issue for DTAARA , DTAQ and MSGF objects
