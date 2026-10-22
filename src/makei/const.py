@@ -30,7 +30,8 @@ TARGET_GROUPS = ["TRG",
                  "QMQRY",
                  "WSCST",
                  "MSG",
-                 "TXT"
+                 "TXT",
+                 "OVL",
                  ]
 
 FILE_TARGETGROUPS_MAPPING = {
@@ -47,7 +48,7 @@ FILE_TARGETGROUPS_MAPPING = {
     "PF": {"PF"},
     "PRTF": {"PRTF"},
     "MNUDDS": {"DSPF"},
-    "FILE": {"PF"},
+    "FILE": {"PF", "OVL"},
     "MENUSRC": {"MENU"},
     "MENU": {"MENU"},
     "MNUCMD": {"MSG"},
@@ -108,6 +109,7 @@ TARGET_TARGETGROUPS_MAPPING = {
     "WSCST": "WSCST",
     "TRG": "TRG",
     "TXT": "TXT",
+    "OVL": "OVL",
 }
 
 FILE_TARGET_MAPPING = {
@@ -124,7 +126,7 @@ FILE_TARGET_MAPPING = {
     "PF": {"FILE"},
     "PRTF": {"FILE"},
     "MNUDDS": {"FILE"},
-    "FILE": {"FILE"},
+    "FILE": {"FILE", "OVL"},
     "MENUSRC": {"MENU"},
     "MENU": {"MENU"},
     "MNUCMD": {"MSGF"},

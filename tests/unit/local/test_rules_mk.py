@@ -45,6 +45,7 @@ def test_wildcard_recipes_variables():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.containing_dir == test_dir
     assert rules_mk.subdirs == []
@@ -184,6 +185,7 @@ def test_from_file():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     variables1 = [
         "private DFTACTGRP = *NO",
@@ -263,6 +265,7 @@ def test_custom_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     commands0 = [
         "@$(call echo_cmd,=== Creating [CRTSBSD.FILE] from custom recipe)",
@@ -323,6 +326,7 @@ def test_dtaara_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
 
     assert rules_mk.src_obj_mapping["LASTORDNO.DTAARA"] == ["LASTORDNO.DTAARA"]
@@ -375,6 +379,7 @@ def test_dtaq_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
 
     assert rules_mk.src_obj_mapping["ORDERS.DTAQ"] == ["ORDERS.DTAQ"]
@@ -427,6 +432,7 @@ def test_pfsql_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
 
     assert rules_mk.containing_dir == data_dir
@@ -483,6 +489,7 @@ def test_dds_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["ARTICLE.PF"] == ["ARTICLE.FILE"]
     assert rules_mk.src_obj_mapping["ART301D.DSPF"] == ["ART301D.FILE"]
@@ -578,6 +585,7 @@ def test_src_obj_mapping():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["LONGSOURCEFILENAME.RPGLE"] == ["OBSCURE.MODULE"]
     assert rules_mk.src_obj_mapping["HELLO.RPGLE"] == ["HELLO.PGM", "HELLO.MODULE"]
@@ -655,6 +663,7 @@ def test_src_obj_mapping_from_root_folder():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["HELLOP.RPGLE"] == ["HELLO.MODULE"]
     assert rules_mk.containing_dir == test_dir
@@ -704,6 +713,7 @@ def test_src_obj_mapping_from_subfolder():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["TEST.SQLRPGLE"] == ["TESTX.MODULE"]
     assert rules_mk.containing_dir == test_dir
@@ -751,6 +761,7 @@ def test_src_obj_mapping_from_subfolder1():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["TEST.SQLRPGLE"] == ["TEST2.PGM"]
     assert rules_mk.containing_dir == test_dir
@@ -800,6 +811,7 @@ def test_pgm_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.containing_dir == data_dir
     assert rules_mk.subdirs == []
@@ -900,6 +912,7 @@ def test_relativepath_subfolder1():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     # assert rules_mk.src_obj_mapping['HELLO.RPGLE'] == ['HELLO.PGM']
     assert rules_mk.containing_dir == test_dir
@@ -948,6 +961,7 @@ def test_relativepath_subfolder2():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.containing_dir == test_dir
     assert rules_mk.subdirs == ["QRPGLESRC"]
@@ -987,6 +1001,7 @@ def test_relativepath_subfolder3():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     # assert rules_mk.src_obj_mapping['HELLO.RPGLE'] == ['HELLO.PGM']
     assert rules_mk.containing_dir == test_dir
@@ -1035,6 +1050,7 @@ def test_relativepath_rules():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.containing_dir == test_dir
     assert rules_mk.subdirs == [
@@ -1075,6 +1091,7 @@ def test_sql_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.containing_dir == data_dir
     assert rules_mk.targets == expected_targets
@@ -1141,6 +1158,7 @@ def test_trg_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["ORD700A.SYSTRG"] == ["ORD700A.TRG"]
     assert rules_mk.src_obj_mapping["MYPF1.PF"] == ["MYPF1.FILE"]
@@ -1233,6 +1251,7 @@ def test_opmrpg_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["MAINPGM.RPG"] == ["MAINPGM.PGM"]
     assert rules_mk.src_obj_mapping["CPY02.RPG"] == ["CPY02.PGM"]
@@ -1309,6 +1328,7 @@ def test_opmsqlrpg_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["MAINPGM22.SQLRPG"] == ["MAINPGM22.PGM"]
     assert rules_mk.containing_dir == data_dir
@@ -1366,6 +1386,7 @@ def test_cbl_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["SIMPLE.CBL"] == ["SIMPLE.PGM"]
     assert rules_mk.containing_dir == data_dir
@@ -1423,6 +1444,7 @@ def test_txt_custom():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": ["SAMPLE1.TXT"],
+        "OVLs": [],
     }
     commands0 = [
         "@$(call echo_cmd,=== Creating [SAMPLE1.TXT] from custom recipe)",
@@ -1478,7 +1500,7 @@ def test_menu_recipe():
         "DTAQs": [],
         "SQLs": [],
         "BNDDs": [],
-        "PFs": ["FOOP.MENU"],
+        "PFs": [],
         "LFs": [],
         "DSPFs": ["FOO.FILE"],
         "PRTFs": [],
@@ -1486,12 +1508,13 @@ def test_menu_recipe():
         "MODULEs": [],
         "SRVPGMs": [],
         "PGMs": [],
-        "MENUs": [],
+        "MENUs": ["FOOP.MENU"],
         "PNLGRPs": [],
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": ["FOO1.MSGF"],
-        "TXTs": []
+        "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["FOO.MNUDDS"] == ["FOO.FILE"]
     assert rules_mk.src_obj_mapping["FOOQQ.MNUCMD"] == ["FOO1.MSGF"]
@@ -1543,8 +1566,8 @@ FOOP.MENU_RECIPE=FILE_MSGF_TO_MENU_RECIPE
 
     assert (
         str(rules_mk)
-        == """PFs := FOOP.MENU
-DSPFs := FOO.FILE
+        == """DSPFs := FOO.FILE
+MENUs := FOOP.MENU
 MSGs := FOO1.MSGF
 
 
@@ -1589,7 +1612,8 @@ def test_wildcardcust():
         "QMQRYs": ["HELLOX.QMQRY"],
         "WSCSTs": [],
         "MSGs": [],
-        "TXTs": []
+        "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.containing_dir == test_dir
     assert rules_mk.subdirs == []
@@ -1641,7 +1665,8 @@ def test_hash():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
-        "TXTs": []
+        "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["#SAMPLE.PF"] == ['\\#SAMPLE.FILE']
     assert rules_mk.src_obj_mapping["HE#LLO.RPGLE"] == ['HE\\#LLO.MODULE']
@@ -1714,7 +1739,8 @@ def test_dollar():
         "QMQRYs": [],
         "WSCSTs": [],
         "MSGs": [],
-        "TXTs": []
+        "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.src_obj_mapping["$SAMPLE.PF"] == ['$SAMPLE.FILE']
     assert rules_mk.src_obj_mapping["DOLLAR$.RPGLE"] == ['DOLLAR$.MODULE']
@@ -1788,6 +1814,7 @@ def test_custom_recipe_with_dollar():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.containing_dir == data_dir
     assert rules_mk.subdirs == []
@@ -1852,6 +1879,7 @@ def test_single_cmd_pgm_rpgle_recipe():
         "WSCSTs": [],
         "MSGs": [],
         "TXTs": [],
+        "OVLs": [],
     }
     assert rules_mk.containing_dir == data_dir
     assert rules_mk.subdirs == []
@@ -1884,4 +1912,57 @@ def test_single_cmd_pgm_rpgle_recipe():
         "ORD700.PGM_SRC=ord700.pgm.rpgle\n"
         "ORD700.PGM_DEP=\n"
         "ORD700.PGM_RECIPE=PGM.RPGLE_TO_PGM_RECIPE\n"
+    )
+
+
+def test_ovl_recipe():
+    # Test loading from a valid file
+    rules_mk = RulesMk.from_file(data_dir / "ovl.rules.mk", data_dir)
+    expected_targets = {
+        "TRGs": [],
+        "DTAARAs": [],
+        "DTAQs": [],
+        "SQLs": [],
+        "BNDDs": [],
+        "PFs": [],
+        "LFs": [],
+        "DSPFs": [],
+        "PRTFs": [],
+        "CMDs": [],
+        "MODULEs": [],
+        "SRVPGMs": [],
+        "PGMs": [],
+        "MENUs": [],
+        "PNLGRPs": [],
+        "QMQRYs": [],
+        "WSCSTs": [],
+        "MSGs": [],
+        "TXTs": [],
+        "OVLs": ["OVLDSIGN.OVL"],
+    }
+    assert rules_mk.src_obj_mapping["DEMOSRC.FILE"] == ["OVLDSIGN.OVL"]
+    assert rules_mk.containing_dir == data_dir
+    assert rules_mk.subdirs == []
+    assert rules_mk.targets == expected_targets
+
+    assert rules_mk.rules[0].variables == []
+    assert rules_mk.rules[0].commands == []
+    assert rules_mk.rules[0].dependencies == []
+    assert rules_mk.rules[0].include_dirs == []
+    assert rules_mk.rules[0].target == "OVLDSIGN.OVL"
+    assert rules_mk.rules[0].source_file == "DEMOSRC.FILE"
+    assert (
+        str(rules_mk.rules[0])
+        == """OVLDSIGN.OVL_SRC=DEMOSRC.FILE
+OVLDSIGN.OVL_DEP=
+OVLDSIGN.OVL_RECIPE=FILE_TO_OVL_RECIPE
+"""
+    )
+    assert (
+        str(rules_mk)
+        == """OVLs := OVLDSIGN.OVL\n\n
+OVLDSIGN.OVL_SRC=DEMOSRC.FILE
+OVLDSIGN.OVL_DEP=
+OVLDSIGN.OVL_RECIPE=FILE_TO_OVL_RECIPE
+"""
     )

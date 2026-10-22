@@ -10,6 +10,18 @@ if [ ! -z "$IBMiEnvCmd" ]; then
   done
 fi
 
+# Detect -c CRTOVL to select the Python module.
+PYTHON_MODULE="crtfrmstmf"
+_prev=""
+for arg in "$@"; do
+  if [ "$_prev" = "-c" ] && [ "$(echo "$arg" | tr '[:lower:]' '[:upper:]')" = "CRTOVL" ]; then
+    PYTHON_MODULE="crtovl"
+    break
+  fi
+  _prev="$arg"
+done
+
+
 iasp_name="${iasp:-$IASP}"
 if [ ! -z "$iasp_name" ] && ! echo "$IBMiEnvCmd" | grep -qi "SETASPGRP"; then
   cl "SETASPGRP ASPGRP($iasp_name)"
@@ -17,4 +29,5 @@ fi
 
 unset IFS
 
-PYTHONPATH="${TOBI_DIR}/src":${PYTHONPATH} /QOpenSys/pkgs/bin/python3.9 "${TOBI_DIR}/src/makei/crtfrmstmf.py" "$@"
+PYTHONPATH="${TOBI_DIR}/src":${PYTHONPATH} /QOpenSys/pkgs/bin/python3.9 \
+  "${TOBI_DIR}/src/makei/${PYTHON_MODULE}.py" "$@"

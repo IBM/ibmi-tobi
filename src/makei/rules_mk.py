@@ -10,7 +10,7 @@ from typing import Callable, Dict, List, Optional, TYPE_CHECKING
 from makei.const import (FILE_TARGETGROUPS_MAPPING, TARGET_GROUPS, TARGET_TARGETGROUPS_MAPPING, MEMBER_TEXT_LINES,
                          METADATA_HEADER, TEXT_HEADER)
 from makei.utils import (decompose_filename, is_source_file, check_keyword_in_file, get_line, get_style_dict,
-                         escape_special_chars)
+                         escape_special_chars, colored, Colors)
 
 if TYPE_CHECKING:
     from makei.build import BuildEnv
@@ -258,6 +258,16 @@ class RulesMk:
         for rule in rules:
             if rule.source_file is not None:
                 decomposed_src = decompose_filename(rule.source_file)
+                if rule.target.endswith(".OVL") and decomposed_src[2].upper() == "FILE":
+                    ovl_name = rule.target.rsplit('.', 1)[0]
+                    # An escaped hash (\#) in Rules.mk is a single character in the object name
+                    ovl_name_len = len(ovl_name.replace(r'\#', '#'))
+                    if ovl_name_len > 8:
+                        print(colored(
+                            f"Warning: Overlay object name '{ovl_name}' in target '{rule.target}' is "
+                            f"{ovl_name_len} characters. IBM i *OVL object names are limited to 8 characters. "
+                            f"Rename the target in Rules.mk to 8 characters or fewer.", Colors.WARNING))
+                        sys.exit(1)
                 src = f"{decomposed_src[0].upper()}.{decomposed_src[2].upper()}"
                 if src not in self.src_obj_mapping:
                     self.src_obj_mapping[src] = [rule.target]
@@ -500,6 +510,9 @@ class RulesMk:
         for rule in rules:
             if rule.is_source_file:
                 source_location = dir_path.joinpath(rule.source_file.rsplit("/", 1)[-1])
+                # .FILE artefacts are binary save files - skip text scanning
+                if source_location.suffix.upper() == ".FILE":
+                    continue
                 is_text_defined = RulesMk._find_source_member_text(source_location)
 
                 # Overrides member text defined in Rules.mk if comment at top of source

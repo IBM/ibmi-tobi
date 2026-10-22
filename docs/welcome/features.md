@@ -78,6 +78,7 @@ Where:
 
 > **Note:** TOBi also supports building a `*MENU` from `.MENUSRC` source (listed in the supported object types table above via the `CRTFRMSTMF` open source project).
 
+
 ## Support CL pseudo-source
 
 The following object types are supported as pseudo-source.  
@@ -161,6 +162,53 @@ EXTPROC.SQLPRC: extproc.sqlprc
 ```
 
 The build log shows `Creating SQL PROCEDURE ...` for internal procedures and `Registering external SQL PROCEDURE ...` for external ones.
+
+## Support Overlay (*OVL) object
+
+> **Note:**
+> TOBi currently supports overlays with data type `*AFPU` only. `*AFPDS` is not supported.
+
+> **Note:** IBM i *OVL object names are limited to a maximum of 8 characters. The target name in Rules.mk must match the member name in the Source Overlay File. If the target name exceeds 8 characters, TOBi stops the build and displays an error asking you to rename the target.
+
+An overlay object (`*OVL`) is created with `CRTOVL`, which needs a member of an Source Overlay File. Because overlay source members are not plain text, they cannot be stored as individual IFS source files. Instead, the whole Source Overlay File is packaged as a save file and copies to IFS as `<SRCOVLFILE>.FILE`. During the build, TOBi restores the Source Overlay File from that save file and runs `CRTOVL` against the member that has the same name as the target in `Rules.mk`.
+
+| Object Type | Target Extension | Source                                | CL Command |
+| :---------- | :--------------- | :------------------------------------ | :--------- |
+| *OVL        | .OVL             | `<SRCFOVLILE>.FILE`                   | CRTOVL     |
+
+### Prerequisite: 
+
+#### Required licensed program
+* The IBM i server where the overlay is built must have the **IBM Advanced Function Printing Utilities** licensed program installed, since it provides the overlay creation support (`CRTOVL`) used by the build. Make sure this and any other required services are installed on the server before building overlays.
+
+#### Create Source Overlay File and member in IBM i server
+* The user must create the Source Overlay File and its member on the IBM i server before using TOBi to build the overlay object.
+
+#### Prerequisite: Migrate the Source Overlay File to the IFS
+
+* The Source Overlay File (the source overlay file holding the overlay members) must exist on the IBM i and must first be migrated to the IFS using the below command:
+```
+makei cvtsrcof <srcovlfile> <library>
+```
+
+This saves the Source Overlay File into a save file and copies it to the current directory as `<SRCOVLFILE>.FILE`. Use `-l` / `--tolower` to generate a lowercase file name. Once the migration is done, the overlay object can be created by the build.
+
+Example `Rules.mk`:
+
+```make
+OVLDSIGN.OVL: DEMOSRC.FILE
+```
+
+Where:
+* `OVLDSIGN.OVL` — `OVLDSIGN` is overlay object (`*OVL`) to create, it's the same name as the overlay source member name
+* `DEMOSRC.FILE` — `DEMOSRC` is the save file artefact created by `makei cvtsrcof` from the source overlay file that is created in IBM i server
+
+Optional `CRTOVL` settings can be given with the `OVL_DATATYPE` variable (default `*AFPU`) and `TEXT`:
+
+```make
+OVLDSIGN.OVL: private OVL_DATATYPE := *AFPU
+OVLDSIGN.OVL: private TEXT := My overlay description
+```
 
 
 ### TEXT Parameter for SQL Objects
