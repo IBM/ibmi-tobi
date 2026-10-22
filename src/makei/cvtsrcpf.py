@@ -182,7 +182,7 @@ class CvtSrcPf:
         library = self.lib.upper()
         srcpf = self.srcfile.upper()
         results = self.job.run_sql(
-            f"select SYSTEM_TABLE_MEMBER, SOURCE_TYPE, PARTITION_TEXT from qsys2.syspartitionstat "
+            f"select SYSTEM_TABLE_MEMBER, SOURCE_TYPE, ifnull(PARTITION_TEXT, '') from qsys2.syspartitionstat "
             f"where SYSTEM_TABLE_SCHEMA='{library}' and SYSTEM_TABLE_NAME='{srcpf}' "
             f"order by SYSTEM_TABLE_MEMBER"
         )
