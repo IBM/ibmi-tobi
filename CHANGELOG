@@ -1,11 +1,13 @@
-- Added new recipe FILE_TO_OVL_RECIPE to create *OVL objects from a Source Overlay File migrated to the IFS with the new `makei cvtsrcof` command.
-- Changed default line endings for `src/scripts` and `bin` from CRLF to LF
-- Added support for building `PGM` objects from both `.clle` and `.pgm.clle` source files
-- Fixed external service program binding order and added `BNDDIR` support to `CRTPGMFLAGS`
-- Fixed rebuild issue for DTAARA , DTAQ and MSGF objects
-- Added a new recipe to support external SQL procedures and resolve rebuild issues
-- Added tobi and dollar support for custom commands for .PGM.RPGLE source and PGM targets
-- Deprecated `iasp` in `iproj.json` in favour of the `iasp` environment variable.
+* Fri Oct 23 2026 Het Patel <het.patel@ibm.com> - 3.5.0
+- Added support for creating *OVL (overlay) objects by introducing the new FILE_TO_OVL_RECIPE and enabling migration of overlay source files to the IFS through the new makei cvtsrcof command. This allows TOBi to build and manage overlay objects more effectively from migrated source overlay files.
+- Standardized file line endings in src/scripts and bin from CRLF to LF to improve cross-platform compatibility, reduce editor and build inconsistencies, and ensure scripts behave reliably across environments.
+- Expanded build support so PGM objects can be generated from both .clle and .pgm.clle source files, which improves CLLE compilation coverage and makes program creation more flexible.
+- Fixed the external service program binding order and added BNDDIR support to CRTPGMFLAGS, ensuring dependent service programs are bound in the correct sequence and that binding directory metadata is included where required.
+- Resolved rebuild issues affecting DTAARA, DTAQ, and MSGF objects so object dependencies and timestamp-based rebuild logic work correctly during incremental builds.
+- Added support for external SQL procedures and fixed rebuild behavior for those objects, improving SQL procedure compilation reliability and dependency tracking in TOBi builds.
+- Added TOBi support for custom commands used with .PGM.RPGLE source files and PGM targets, enabling more flexible, user-defined build rules and command customization in project recipes.
+- Deprecated the iasp property in iproj.json in favor of the iasp environment variable, simplifying configuration and aligning IASP handling with the project environment model.
+- Updated workflow permissions so the GitHub Actions pipeline can execute the required automation steps correctly and avoid permission-related failures during CI validation.
 * Mon Aug 17 2026 Het Patel <het.patel@ibm.com> - 3.4.0
 - Resolved build failure by optimizing Rules.mk file scanning to process only referenced files instead of scanning all files globally, using SUBDIRS chain following for improved performance.
 - Fixed false failures for *FILE targets during parallel make -j builds by implementing file locking mechanism using fcntl.flock() for joblog.json to prevent race conditions.
