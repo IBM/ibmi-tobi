@@ -6,6 +6,8 @@ on:
     branches: [ master ]
     types:
       - completed
+permissions:
+  contents: write
 env:
   SPEC_REPO_SPEC_PATH: ${{ secrets.SPEC_REPO_SPEC_PATH }}
   SPEC_GITHUB_BASE_URL: ${{ secrets.SPEC_GITHUB_BASE_URL }}
