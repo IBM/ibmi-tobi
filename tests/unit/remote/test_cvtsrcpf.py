@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -274,31 +276,42 @@ def test_cvtsrcpf_insert_line_invalid_columns(mock_ibm_job, temp_directory):
     assert result is False
 
 
-@patch("os.popen")
-def test_retrieve_ccsid(mock_popen):
+@patch("makei.cvtsrcpf.subprocess.run")
+def test_retrieve_ccsid(mock_run):
     """Test retrieve_ccsid function"""
-    mock_stream = Mock()
-    mock_stream.read.return_value = "CCSID=37\nOWNER=USER\nSIZE=1024"
-    mock_popen.return_value = mock_stream
+    mock_run.return_value = Mock(stdout="CCSID=37\nOWNER=USER\nSIZE=1024")
 
     ccsid = retrieve_ccsid("/path/to/file", "1208")
 
     assert ccsid == "37"
-    mock_popen.assert_called_once_with("/QOpenSys/usr/bin/attr /path/to/file")
+    mock_run.assert_called_once_with(["/QOpenSys/usr/bin/attr", "/path/to/file"],
+                                     capture_output=True, text=True, errors="replace")
 
 
-@patch("os.popen")
-def test_retrieve_ccsid_with_default(mock_popen):
+@patch("makei.cvtsrcpf.subprocess.run")
+def test_retrieve_ccsid_with_default(mock_run):
     """Test retrieve_ccsid with default value when attr fails"""
-    mock_stream = Mock()
     # Return valid CCSID format to test default value usage
-    mock_stream.read.return_value = "CCSID=1208"
-    mock_popen.return_value = mock_stream
+    mock_run.return_value = Mock(stdout="CCSID=1208")
 
     # Should return the CCSID from the file
     ccsid = retrieve_ccsid("/path/to/file", "1208")
 
     assert ccsid == "1208"
+
+
+def test_retrieve_ccsid_invalid_utf8_output():
+    """Test retrieve_ccsid does not crash when attr output is not valid UTF-8 (#507)"""
+    real_run = subprocess.run
+    # Emit attr-style output containing an EBCDIC byte (0x81) that is not valid UTF-8
+    fake_attr = [sys.executable, "-c",
+                 "import sys; sys.stdout.buffer.write(b'CCSID=37\\nTEXT=\\x81 source\\n')"]
+
+    with patch("makei.cvtsrcpf.subprocess.run",
+               side_effect=lambda args, **kwargs: real_run(fake_attr, **kwargs)):
+        ccsid = retrieve_ccsid("/path/to/file", "1208")
+
+    assert ccsid == "37"
 
 
 @patch("makei.cvtsrcpf.IBMJob")
