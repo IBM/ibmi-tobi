@@ -109,6 +109,45 @@ def default_filter_func(record: Dict[str, Any]) -> bool:
     return True
 
 
+def _append_joblog_json(path: Path, entry: Dict[str, Any]):
+    # Serialize only this result, before taking the lock or modifying the file.
+    serialized = json.dumps([entry], indent=4).encode("utf-8")
+    with path.with_suffix(".lock").open("w") as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
+        try:
+            if not path.is_file():
+                with path.open("wb") as json_file:
+                    json_file.write(serialized)
+                return
+
+            with path.open("r+b") as json_file:
+                size = json_file.seek(0, 2)
+                if size >= 10:
+                    json_file.seek(0)
+                    prefix = json_file.read(2)
+                    json_file.seek(-8, 2)
+                    suffix = json_file.read(8)
+                    # Recognize the layout written by TOBi. Replace only the
+                    # closing newline and array bracket, preserving old entries.
+                    if prefix == b"[\n" and suffix == b"\n    }\n]":
+                        json_file.seek(-2, 2)
+                        json_file.write(b",\n" + serialized[2:])
+                        return
+
+                # Empty arrays (including launch's "[]\n") and other JSON
+                # layouts are parsed and normalized once. Subsequent writes
+                # take the constant-size read path above.
+                json_file.seek(0)
+                data = json.load(json_file)
+                data.append(entry)
+                serialized = json.dumps(data, indent=4).encode("utf-8")
+                json_file.seek(0)
+                json_file.write(serialized)
+                json_file.truncate()
+        finally:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
+
+
 def save_joblog_json(cmd: str, cmd_time: str, jobid: str, build_object: str, source: str, output: str,
                      failed: bool, joblog_json: Optional[str],
                      filter_func: Callable[[Dict[str, Any]], bool] = default_filter_func):
@@ -145,23 +184,6 @@ def save_joblog_json(cmd: str, cmd_time: str, jobid: str, build_object: str, sou
     }
 
     if joblog_json is not None:
-        joblog_json_path = Path(joblog_json)
-        # Use an exclusive lock so parallel make jobs (-j N) cannot
-        # interleave their read-modify-write on the shared file.
-        lock_path = joblog_json_path.with_suffix(".lock")
-        with lock_path.open("w") as lock_file:
-            fcntl.flock(lock_file, fcntl.LOCK_EX)
-            try:
-                if joblog_json_path.is_file():
-                    with joblog_json_path.open(encoding="utf-8") as json_file:
-                        data = json.load(json_file)
-                        data.append(dumped_joblog)
-                else:
-                    data = [dumped_joblog]
-
-                with joblog_json_path.open('w', encoding="utf-8") as json_file:
-                    json.dump(data, json_file, indent=4)
-            finally:
-                fcntl.flock(lock_file, fcntl.LOCK_UN)
+        _append_joblog_json(Path(joblog_json), dumped_joblog)
     else:
         print(json.dumps([dumped_joblog], indent=4))
