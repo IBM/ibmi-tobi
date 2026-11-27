@@ -20,7 +20,7 @@
 
 > [!ATTENTION]
 >
-> `makei build` will try to build all changes objects, or all objects on the first time it's run. Consider creating an Action for `OPT=*EVENTF BUILDLIB=&CURLIB /QOpenSys/pkgs/bin/makei compile &BASENAME` to compile specific objects.
+> `makei build` will try to build all changes objects, or all objects on the first time it's run. Consider creating an Action for `OPT=*EVENTF BUILDLIB=&CURLIB /QOpenSys/pkgs/bin/makei compile -f &BASENAME` to compile specific objects.
 
 ## Developing on the local machine with ibmi-tobi
 
